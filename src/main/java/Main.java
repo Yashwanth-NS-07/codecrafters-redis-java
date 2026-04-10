@@ -37,7 +37,7 @@ public class Main {
                     SocketChannel clientSocketChannel = ((ServerSocketChannel) selectionKey.channel()).accept();
                     clientSocketChannel.configureBlocking(false);
                     clientSocketChannel.register(selector, SelectionKey.OP_READ);
-                    System.out.println("Accepted connection from: " + clientSocketChannel.getRemoteAddress());
+//                    System.out.println("Accepted connection from: " + clientSocketChannel.getRemoteAddress());
                 } else if(selectionKey.isReadable()) {
                     SocketChannel clientSocketChannel = (SocketChannel) selectionKey.channel();
                     int readBytes = 0;
