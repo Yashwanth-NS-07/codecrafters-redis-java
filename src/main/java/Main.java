@@ -14,8 +14,8 @@ public class Main {
     public static void main(String[] args) throws IOException {
         System.out.println("Starting Redis server...");
         ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
-        serverSocketChannel.bind(new InetSocketAddress(6379));
         serverSocketChannel.configureBlocking(false);
+        serverSocketChannel.bind(new InetSocketAddress(6379));
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Stopping Redis server...");
@@ -28,8 +28,8 @@ public class Main {
         StringBuilder sb = new StringBuilder();
 
         while(isRunning) {
+            selector.select(1000);
             Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
-            System.out.println("Number of connections: " + iterator.hasNext());
             while(iterator.hasNext()  && isRunning) {
                 SelectionKey selectionKey = iterator.next();
                 iterator.remove();
@@ -37,22 +37,25 @@ public class Main {
                     SocketChannel clientSocketChannel = ((ServerSocketChannel) selectionKey.channel()).accept();
                     clientSocketChannel.configureBlocking(false);
                     clientSocketChannel.register(selector, SelectionKey.OP_READ);
+                    System.out.println("Accepted connection from: " + clientSocketChannel.getRemoteAddress());
                 } else if(selectionKey.isReadable()) {
                     SocketChannel clientSocketChannel = (SocketChannel) selectionKey.channel();
                     int readBytes = 0;
                     while((readBytes = clientSocketChannel.read(byteBuffer)) > 0) {
                         if(readBytes >= 100) throw new RuntimeException("read more than 100 bytes, it's not supported yet");
+                        System.out.println("read bytes: " + readBytes);
                         byteBuffer.flip();
-                        CharBuffer charBuffer = byteBuffer.asCharBuffer();
-                        while(charBuffer.hasRemaining()) {
-                            sb.append(charBuffer.get());
+                        while(byteBuffer.hasRemaining()) {
+                            sb.append((char) byteBuffer.get());
                         }
-                        byteBuffer.reset();
-                        if(sb.equals("PING")) {
+                        byteBuffer.clear();
+                        System.out.println("Read message: " + sb.toString());
+                        if(sb.toString().trim().equals("PING")) {
                             byteBuffer.put("+PONG\r\n".getBytes(), 0, 7);
                             clientSocketChannel.write(byteBuffer);
-                            byteBuffer.reset();
                         }
+                        byteBuffer.clear();
+                        sb.delete(0, sb.length());
                     }
                     if(readBytes == -1) {
                         clientSocketChannel.close();
