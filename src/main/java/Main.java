@@ -50,9 +50,11 @@ public class Main {
                         }
                         byteBuffer.clear();
                         System.out.println("Read message: " + sb.toString());
-                        if(sb.toString().trim().equals("PING")) {
+                        if(sb.toString().startsWith("PING")) {
                             byteBuffer.put("+PONG\r\n".getBytes(), 0, 7);
-                            clientSocketChannel.write(byteBuffer);
+                            byteBuffer.flip();
+                            int num = clientSocketChannel.write(byteBuffer);
+                            System.out.println("Wrote byte: " + num);
                         }
                         byteBuffer.clear();
                         sb.delete(0, sb.length());
