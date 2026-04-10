@@ -12,13 +12,13 @@ public class Main {
     private static boolean isRunning = true;
     private static ByteBuffer byteBuffer = ByteBuffer.allocate(100);
     public static void main(String[] args) throws IOException {
-        System.out.println("Starting Redis server...");
+//        System.out.println("Starting Redis server...");
         ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.configureBlocking(false);
         serverSocketChannel.bind(new InetSocketAddress(6379));
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("Stopping Redis server...");
+//            System.out.println("Stopping Redis server...");
             isRunning = false;
         }));
 
@@ -43,18 +43,18 @@ public class Main {
                     int readBytes = 0;
                     while((readBytes = clientSocketChannel.read(byteBuffer)) > 0) {
                         if(readBytes >= 100) throw new RuntimeException("read more than 100 bytes, it's not supported yet");
-                        System.out.println("read bytes: " + readBytes);
+//                        System.out.println("read bytes: " + readBytes);
                         byteBuffer.flip();
                         while(byteBuffer.hasRemaining()) {
                             sb.append((char) byteBuffer.get());
                         }
                         byteBuffer.clear();
-                        System.out.println("Read message: " + sb.toString());
+//                        System.out.println("Read message: " + sb.toString());
                         if(sb.toString().startsWith("PING")) {
                             byteBuffer.put("+PONG\r\n".getBytes(), 0, 7);
                             byteBuffer.flip();
                             int num = clientSocketChannel.write(byteBuffer);
-                            System.out.println("Wrote byte: " + num);
+//                            System.out.println("Wrote byte: " + num);
                         }
                         byteBuffer.clear();
                         sb.delete(0, sb.length());
