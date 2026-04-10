@@ -1,33 +1,64 @@
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.Iterator;
 
 public class Main {
-  public static void main(String[] args){
-    // You can use print statements as follows for debugging, they'll be visible when running tests.
-    System.out.println("Logs from your program will appear here!");
+    private static boolean isRunning = true;
+    private static ByteBuffer byteBuffer = ByteBuffer.allocate(100);
+    public static void main(String[] args) throws IOException {
+        System.out.println("Starting Redis server...");
+        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+        serverSocketChannel.bind(new InetSocketAddress(6379));
+        serverSocketChannel.configureBlocking(false);
 
-//      Uncomment the code below to pass the first stage
-        ServerSocket serverSocket = null;
-        Socket clientSocket = null;
-        int port = 6379;
-        try {
-          serverSocket = new ServerSocket(port);
-          // Since the tester restarts your program quite often, setting SO_REUSEADDR
-          // ensures that we don't run into 'Address already in use' errors
-          serverSocket.setReuseAddress(true);
-          // Wait for connection from client.
-          clientSocket = serverSocket.accept();
-        } catch (IOException e) {
-          System.out.println("IOException: " + e.getMessage());
-        } finally {
-          try {
-            if (clientSocket != null) {
-              clientSocket.close();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Stopping Redis server...");
+            isRunning = false;
+        }));
+
+        Selector selector = Selector.open();
+        serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+
+        StringBuilder sb = new StringBuilder();
+
+        while(isRunning) {
+            Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
+            System.out.println("Number of connections: " + iterator.hasNext());
+            while(iterator.hasNext()  && isRunning) {
+                SelectionKey selectionKey = iterator.next();
+                iterator.remove();
+                if(selectionKey.isAcceptable()) {
+                    SocketChannel clientSocketChannel = ((ServerSocketChannel) selectionKey.channel()).accept();
+                    clientSocketChannel.configureBlocking(false);
+                    clientSocketChannel.register(selector, SelectionKey.OP_READ);
+                } else if(selectionKey.isReadable()) {
+                    SocketChannel clientSocketChannel = (SocketChannel) selectionKey.channel();
+                    int readBytes = 0;
+                    while((readBytes = clientSocketChannel.read(byteBuffer)) > 0) {
+                        if(readBytes >= 100) throw new RuntimeException("read more than 100 bytes, it's not supported yet");
+                        byteBuffer.flip();
+                        CharBuffer charBuffer = byteBuffer.asCharBuffer();
+                        while(charBuffer.hasRemaining()) {
+                            sb.append(charBuffer.get());
+                        }
+                        byteBuffer.reset();
+                        if(sb.equals("PING")) {
+                            byteBuffer.put("+PONG\r\n".getBytes(), 0, 7);
+                            clientSocketChannel.write(byteBuffer);
+                            byteBuffer.reset();
+                        }
+                    }
+                    if(readBytes == -1) {
+                        clientSocketChannel.close();
+                    }
+                }
             }
-          } catch (IOException e) {
-            System.out.println("IOException: " + e.getMessage());
-          }
         }
-  }
+    }
 }
