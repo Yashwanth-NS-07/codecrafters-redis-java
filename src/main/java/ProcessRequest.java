@@ -25,8 +25,8 @@ public class ProcessRequest {
             if(request.getParameterCount() == 3) {
                 Store.put(key, value, -1);
             } else {
-                String arg = request.getParameter(4);
-                long expiryTime = Integer.parseInt(request.getParameter(5));
+                String arg = request.getParameter(3);
+                long expiryTime = Integer.parseInt(request.getParameter(4));
                 if(arg.equals("EX")) {
                     long liveTime = expiryTime * 1000L;
                     Store.put(key, value, liveTime);
