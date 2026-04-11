@@ -6,7 +6,7 @@ public class ProcessRequest {
     private static final ByteBuffer byteBuffer = ByteBuffer.allocate(1000);
     public static void process(Request request, SocketChannel channel) throws IOException {
         String value = request.getParameter(0);
-        if(value.equals("ping")) {
+        if(value.equalsIgnoreCase("ping")) {
             byteBuffer.clear();
             byteBuffer.put("+PONG\r\n".getBytes());
             byteBuffer.flip();
