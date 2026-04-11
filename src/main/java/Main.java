@@ -1,31 +1,31 @@
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
+import java.util.Optional;
 
 public class Main {
     private static boolean isRunning = true;
-    private static ByteBuffer byteBuffer = ByteBuffer.allocate(100);
+    private static final ByteBuffer byteBuffer = ByteBuffer.allocate(1000);
+
     public static void main(String[] args) throws IOException {
-//        System.out.println("Starting Redis server...");
+        System.out.print("Starting Redis server...");
         ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.configureBlocking(false);
         serverSocketChannel.bind(new InetSocketAddress(6379));
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-//            System.out.println("Stopping Redis server...");
+            System.out.print("Stopping Redis server...");
             isRunning = false;
         }));
 
         Selector selector = Selector.open();
         serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
-
-        StringBuilder sb = new StringBuilder();
+        System.out.println("done");
 
         while(isRunning) {
             selector.select(1000);
@@ -37,33 +37,29 @@ public class Main {
                     SocketChannel clientSocketChannel = ((ServerSocketChannel) selectionKey.channel()).accept();
                     clientSocketChannel.configureBlocking(false);
                     clientSocketChannel.register(selector, SelectionKey.OP_READ);
-//                    System.out.println("Accepted connection from: " + clientSocketChannel.getRemoteAddress());
+                    System.out.println("Accepted connection from: " + clientSocketChannel.getRemoteAddress());
                 } else if(selectionKey.isReadable()) {
                     SocketChannel clientSocketChannel = (SocketChannel) selectionKey.channel();
-                    int readBytes = 0;
-                    while((readBytes = clientSocketChannel.read(byteBuffer)) > 0) {
-                        if(readBytes >= 100) throw new RuntimeException("read more than 100 bytes, it's not supported yet");
-//                        System.out.println("read bytes: " + readBytes);
-                        byteBuffer.flip();
-                        while(byteBuffer.hasRemaining()) {
-                            sb.append((char) byteBuffer.get());
-                        }
-                        byteBuffer.clear();
-//                        System.out.println("Read message: " + sb.toString());
-                        if(sb.toString().startsWith("PING")) {
-                            byteBuffer.put("+PONG\r\n".getBytes(), 0, 7);
-                            byteBuffer.flip();
-                            int num = clientSocketChannel.write(byteBuffer);
-//                            System.out.println("Wrote byte: " + num);
-                        }
-                        byteBuffer.clear();
-                        sb.delete(0, sb.length());
-                    }
-                    if(readBytes == -1) {
-                        clientSocketChannel.close();
-                    }
+                    handleRead(clientSocketChannel);
                 }
             }
         }
+        for(SelectionKey key: selector.keys()) {
+            key.channel().close();
+        }
+        selector.close();
+        System.out.println("done");
+    }
+    private static void handleRead(SocketChannel clientSocketChannel) throws IOException {
+        Optional<Request> optRequest = Request.readRequest(clientSocketChannel);
+        if(optRequest.isEmpty()) return;
+        Request request = optRequest.get();
+        writePingResponse(clientSocketChannel);
+    }
+    private static void writePingResponse(SocketChannel socketChannel) throws IOException {
+        byteBuffer.clear();
+        byteBuffer.put("+PONG\r\n".getBytes());
+        byteBuffer.flip();
+        socketChannel.write(byteBuffer);
     }
 }
