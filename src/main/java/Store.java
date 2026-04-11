@@ -13,7 +13,7 @@ public class Store {
     public static Optional<String> get(String key) {
         if(map.containsKey(key)) {
             Value value = map.get(key);
-            if(value.timestamp == -1) {
+            if(value.liveTime == -1) {
                 return Optional.of(value.value);
             } else {
                 long duration = System.currentTimeMillis() - value.timestamp;
