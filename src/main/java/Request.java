@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class Request {
-    private int parameterCount;
-    private List<Parameter> parameterList;
+    private final int parameterCount;
+    private final List<String> parameterList;
 
     private Request(int parameterCount) {
         this.parameterCount = parameterCount;
@@ -54,14 +54,10 @@ public class Request {
 
                         byte[] value = new byte[length];
                         byteBuffer.get(value);
-                        request.addParameter(
-                                new Parameter(
-                                        length,
-                                        new String(value)
-                                )
-                        );
+                        request.addParameter(new String(value));
                         // skipping \r\n
                         byteBuffer.getShort();
+                        break;
                     } else {
                         sb.append(c);
                     }
@@ -81,27 +77,11 @@ public class Request {
     public int getParameterCount() {
         return this.parameterCount;
     }
-    private void addParameter(Parameter parameter) {
+    private void addParameter(String parameter) {
+        assert parameterCount == parameterList.size();
         this.parameterList.add(parameter);
     }
-    public Parameter getParameter(int i) {
+    public String getParameter(int i) {
         return parameterList.get(i);
-    }
-    private static class Parameter {
-        private int count;
-        private String value;
-
-        public Parameter(int count, String value) {
-            this.count = count;
-            this.value = value;
-        }
-
-        public int getCount() {
-            return count;
-        }
-
-        public String getValue() {
-            return value;
-        }
     }
 }

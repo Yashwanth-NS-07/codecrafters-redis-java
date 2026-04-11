@@ -10,7 +10,6 @@ import java.util.Optional;
 
 public class Main {
     private static boolean isRunning = true;
-    private static final ByteBuffer byteBuffer = ByteBuffer.allocate(1000);
 
     public static void main(String[] args) throws IOException {
         System.out.print("Starting Redis server...");
@@ -54,12 +53,6 @@ public class Main {
         Optional<Request> optRequest = Request.readRequest(clientSocketChannel);
         if(optRequest.isEmpty()) return;
         Request request = optRequest.get();
-        writePingResponse(clientSocketChannel);
-    }
-    private static void writePingResponse(SocketChannel socketChannel) throws IOException {
-        byteBuffer.clear();
-        byteBuffer.put("+PONG\r\n".getBytes());
-        byteBuffer.flip();
-        socketChannel.write(byteBuffer);
+        ProcessRequest.process(request, clientSocketChannel);
     }
 }
