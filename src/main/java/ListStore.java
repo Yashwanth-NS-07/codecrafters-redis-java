@@ -1,19 +1,21 @@
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ListStore {
-    private static final Map<String, List<String>> map;
+    private static final Map<String, LinkedList<String>> map;
     static {
         map = new HashMap<>();
     }
 
     private static void add(String listName, String value) {
-        map.putIfAbsent(listName, new ArrayList<>());
+        map.putIfAbsent(listName, new LinkedList<>());
         map.get(listName).add(value);
     }
+    private static void addFirst(String listName, String value) {
+        map.putIfAbsent(listName, new LinkedList<>());
+        map.get(listName).addFirst(value);
+    }
+
     private static boolean isListExists(String listName) {
         return map.containsKey(listName);
     }
@@ -32,6 +34,16 @@ public class ListStore {
         for (int i = 2; i < request.getParameterCount(); i++) {
             String valueToAppend = request.getParameter(i);
             ListStore.add(listName, valueToAppend);
+        }
+        int listSize = ListStore.size(listName);
+        byteBuffer.put((":" + listSize + "\r\n").getBytes());
+    }
+
+    public static void handleLPUSH(Request request, ByteBuffer byteBuffer) {
+        String listName = request.getParameter(1);
+        for (int i = 2; i < request.getParameterCount(); i++) {
+            String valueToAppend = request.getParameter(i);
+            ListStore.addFirst(listName, valueToAppend);
         }
         int listSize = ListStore.size(listName);
         byteBuffer.put((":" + listSize + "\r\n").getBytes());
