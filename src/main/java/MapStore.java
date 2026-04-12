@@ -1,16 +1,17 @@
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.*;
 
 public class MapStore {
     private static final Map<String, Value> map;
     static {
         map = new HashMap<>();
     }
-    public static void put(String key, String value, long liveTime) {
+    private static void put(String key, String value, long liveTime) {
         map.put(key, new Value(value, liveTime));
     }
-    public static Optional<String> get(String key) {
+
+    private static Optional<String> get(String key) {
         if(map.containsKey(key)) {
             Value value = map.get(key);
             if(value.liveTime == -1) {
@@ -25,6 +26,72 @@ public class MapStore {
             }
         }
         return Optional.empty();
+    }
+
+    public static void handleSet(Request request, ByteBuffer byteBuffer) {
+        String key = request.getParameter(1);
+        String value = request.getParameter(2);
+        if(request.getParameterCount() == 3) {
+            put(key, value, -1);
+        } else {
+            String arg = request.getParameter(3);
+            long expiryTime = Integer.parseInt(request.getParameter(4));
+            if(arg.equals("EX")) {
+                long liveTime = expiryTime * 1000L;
+                put(key, value, liveTime);
+            } else if(arg.equalsIgnoreCase("PX")) {
+                put(key, value, expiryTime);
+            }
+        }
+        byteBuffer.put("+OK\r\n".getBytes());
+    }
+
+    public static void handleGet(Request request, ByteBuffer byteBuffer) {
+        Optional<String> optionalVal = get(request.getParameter(1));
+        if(optionalVal.isEmpty()) {
+            byteBuffer.put("$-1\r\n".getBytes());
+        } else {
+            MapStore.Response response = new MapStore.Response(1);
+            response.add(optionalVal.get());
+            writeResponse(response, byteBuffer);
+        }
+    }
+
+    private static void writeResponse(MapStore.Response response, ByteBuffer byteBuffer) {
+        int pCount = response.getParameterCount();
+        if(pCount > 1) {
+            byteBuffer.put(("*" + pCount + "\r\n").getBytes());
+        }
+        for(int i = 0; i < pCount; i++) {
+            String value = response.getParameter(i);
+            byteBuffer.put(("$" + value.length() + "\r\n").getBytes());
+            byteBuffer.put(value.getBytes());
+            byteBuffer.put("\r\n".getBytes());
+        }
+    }
+
+    private static class Response {
+
+        private final int parameterCount;
+        private final List<String> parameterList;
+
+        private Response(int parameterCount) {
+            this.parameterCount = parameterCount;
+            this.parameterList = new ArrayList<>(parameterCount);
+        }
+
+        private void add(String parameter) {
+            assert parameterCount == parameterList.size();
+            parameterList.add(parameter);
+        }
+
+        private String getParameter(int i) {
+            return parameterList.get(i);
+        }
+
+        private int getParameterCount() {
+            return this.parameterCount;
+        }
     }
 
     private static class Value {

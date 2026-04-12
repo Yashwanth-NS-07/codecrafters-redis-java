@@ -1,93 +1,42 @@
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.util.Optional;
 
 public class ProcessRequest {
     private static final ByteBuffer byteBuffer = ByteBuffer.allocate(1000);
     public static void process(Request request, SocketChannel channel) throws IOException {
         String cmd = request.getParameter(0);
-        if(cmd.equalsIgnoreCase("ping")) {
-            byteBuffer.clear();
-            byteBuffer.put("+PONG\r\n".getBytes());
-            byteBuffer.flip();
-            channel.write(byteBuffer);
-        } else if (cmd.equals("ECHO")) {
-            Response response = new Response(1);
-            response.add(request.getParameter(1));
-            Response.writeResponse(response, byteBuffer);
-            byteBuffer.flip();
-            channel.write(byteBuffer);
-        } else if (cmd.equals("SET")) {
-            byteBuffer.clear();
-            byteBuffer.put("+OK\r\n".getBytes());
-            byteBuffer.flip();
-            String key = request.getParameter(1);
-            String value = request.getParameter(2);
-            if(request.getParameterCount() == 3) {
-                MapStore.put(key, value, -1);
-            } else {
-                String arg = request.getParameter(3);
-                long expiryTime = Integer.parseInt(request.getParameter(4));
-                if(arg.equals("EX")) {
-                    long liveTime = expiryTime * 1000L;
-                    MapStore.put(key, value, liveTime);
-                } else if(arg.equalsIgnoreCase("PX")) {
-                    MapStore.put(key, value, expiryTime);
-                }
+        byteBuffer.clear();
+        switch (cmd) {
+            case "PING":
+            case "ping": {
+                byteBuffer.put("+PONG\r\n".getBytes());
+                break;
             }
-            channel.write(byteBuffer);
-        } else if(cmd.equals("GET")) {
-            Optional<String> optionalVal = MapStore.get(request.getParameter(1));
-            if(optionalVal.isEmpty()) {
-                byteBuffer.clear();
-                byteBuffer.put("$-1\r\n".getBytes());
-                byteBuffer.flip();
-                channel.write(byteBuffer);
-            } else {
-                Response response = new Response(1);
-                response.add(optionalVal.get());
-                Response.writeResponse(response, byteBuffer);
-                byteBuffer.flip();
-                channel.write(byteBuffer);
+            case "ECHO": {
+                String value = request.getParameter(1);
+                String response = String.format("*%d\r\n%s\r\n", value.length(), value);
+                byteBuffer.put(response.getBytes());
+                break;
             }
-        } else if(cmd.equals("RPUSH")) {
-            String listName = request.getParameter(1);
-            for(int i = 2; i < request.getParameterCount(); i++) {
-                String valueToAppend = request.getParameter(i);
-                ListStore.add(listName, valueToAppend);
+            case "SET": {
+                MapStore.handleSet(request, byteBuffer);
+                break;
             }
-            int listSize = ListStore.size(listName);
-            byteBuffer.clear();
-            byteBuffer.put((":" + listSize + "\r\n").getBytes());
-            byteBuffer.flip();
-            channel.write(byteBuffer);
-        } else if(cmd.equals("LRANGE")) {
-            String listName = request.getParameter(1);
-            int listSize = ListStore.size(listName);
-            int from = Integer.parseInt(request.getParameter(2));
-            int to = Integer.parseInt(request.getParameter(3));
-            if(from >= 0 && to >= 0) {
-                to = Math.min(to, listSize - 1);
-            } else {
-                to = Math.max(0, listSize + to);
-                if(from < 0) {
-                    from = Math.max(0, to + from + 1);
-                }
+            case "GET": {
+                MapStore.handleGet(request, byteBuffer);
+                break;
             }
-            int pCount = to - from + 1;
-            byteBuffer.clear();
-            if(pCount <= 0) {
-                byteBuffer.put("*0\r\n".getBytes());
-            } else {
-                Response response = new Response(pCount);
-                for (int i = from; i <= to; i++) {
-                    response.add(ListStore.getElement(listName, i));
-                }
-                Response.writeResponse(response, byteBuffer);
+            case "RPUSH": {
+                ListStore.handleRPUSH(request, byteBuffer);
+                break;
             }
-            byteBuffer.flip();
-            channel.write(byteBuffer);
+            case "LRANGE": {
+                ListStore.handleLRANGE(request, byteBuffer);
+                break;
+            }
         }
+        byteBuffer.flip();
+        channel.write(byteBuffer);
     }
 }
