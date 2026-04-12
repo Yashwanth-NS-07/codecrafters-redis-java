@@ -35,8 +35,7 @@ public class ListStore {
             String valueToAppend = request.getParameter(i);
             ListStore.add(listName, valueToAppend);
         }
-        int listSize = ListStore.size(listName);
-        byteBuffer.put((":" + listSize + "\r\n").getBytes());
+        writeSizeResponse(listName, byteBuffer);
     }
 
     public static void handleLPUSH(Request request, ByteBuffer byteBuffer) {
@@ -45,8 +44,7 @@ public class ListStore {
             String valueToAppend = request.getParameter(i);
             ListStore.addFirst(listName, valueToAppend);
         }
-        int listSize = ListStore.size(listName);
-        byteBuffer.put((":" + listSize + "\r\n").getBytes());
+        writeSizeResponse(listName, byteBuffer);
     }
 
     public static void handleLRANGE(Request request, ByteBuffer byteBuffer) {
@@ -74,11 +72,24 @@ public class ListStore {
             for (int i = from; i <= to; i++) {
                 response.add(getElement(listName, i));
             }
-            writeResponse(response, byteBuffer);
+            writeLRangeResponse(response, byteBuffer);
         }
     }
 
-    private static void writeResponse(ListStore.Response response, ByteBuffer byteBuffer) {
+    public static void handleLLEN(Request request, ByteBuffer byteBuffer) {
+        String listName = request.getParameter(1);
+        writeSizeResponse(listName, byteBuffer);
+    }
+
+    private static void writeSizeResponse(String listName, ByteBuffer byteBuffer) {
+        int listSize = 0;
+        if(isListExists(listName)) {
+            listSize = map.get(listName).size();
+        }
+        byteBuffer.put((":" + listSize + "\r\n").getBytes());
+    }
+
+    private static void writeLRangeResponse(ListStore.Response response, ByteBuffer byteBuffer) {
         int pCount = response.getParameterCount();
         byteBuffer.put(("*" + pCount + "\r\n").getBytes());
         for(int i = 0; i < pCount; i++) {

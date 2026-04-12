@@ -39,6 +39,9 @@ public class ProcessRequest {
                 ListStore.handleLRANGE(request, byteBuffer);
                 break;
             }
+            case "LLEN": {
+                ListStore.handleLLEN(request, byteBuffer);
+            }
         }
         byteBuffer.flip();
         channel.write(byteBuffer);
