@@ -65,14 +65,16 @@ public class ProcessRequest {
         } else if(cmd.equals("LRANGE")) {
             String listName = request.getParameter(1);
             int listSize = ListStore.size(listName);
-            int from = Math.max(
-                    Integer.parseInt(request.getParameter(2)),
-                    0
-            );
-            int to = Math.min(
-                    Integer.parseInt(request.getParameter(3)),
-                    listSize - 1
-            );
+            int from = Integer.parseInt(request.getParameter(2));
+            int to = Integer.parseInt(request.getParameter(3));
+            if(from >= 0 && to >= 0) {
+                to = Math.min(to, listSize - 1);
+            } else {
+                to = Math.max(0, listSize + to);
+                if(from < 0) {
+                    from = Math.max(0, to + from);
+                }
+            }
             int pCount = to - from + 1;
             byteBuffer.clear();
             if(pCount <= 0) {
