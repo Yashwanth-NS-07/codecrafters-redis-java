@@ -26,7 +26,7 @@ public class Response {
         return this.parameterCount;
     }
 
-    public static void writeResponse (Response response, SocketChannel channel, ByteBuffer byteBuffer) throws IOException {
+    public static void writeResponse (Response response, ByteBuffer byteBuffer) throws IOException {
         byteBuffer.clear();
         int pCount = response.getParameterCount();
         if(pCount > 1) {
@@ -38,7 +38,5 @@ public class Response {
             byteBuffer.put(value.getBytes());
             byteBuffer.put("\r\n".getBytes());
         }
-        byteBuffer.flip();
-        channel.write(byteBuffer);
     }
 }

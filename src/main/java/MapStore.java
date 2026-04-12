@@ -2,7 +2,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class Store {
+public class MapStore {
     private static final Map<String, Value> map;
     static {
         map = new HashMap<>();
@@ -28,9 +28,9 @@ public class Store {
     }
 
     private static class Value {
-        private long timestamp;
-        private long liveTime;
-        private String value;
+        private final long timestamp;
+        private final long liveTime;
+        private final String value;
         // liveTime value expected in millis
         public Value(String value,long liveTime) {
             this.value = value;

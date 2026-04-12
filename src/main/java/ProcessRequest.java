@@ -15,7 +15,9 @@ public class ProcessRequest {
         } else if (cmd.equals("ECHO")) {
             Response response = new Response(1);
             response.add(request.getParameter(1));
-            Response.writeResponse(response, channel, byteBuffer);
+            Response.writeResponse(response, byteBuffer);
+            byteBuffer.flip();
+            channel.write(byteBuffer);
         } else if (cmd.equals("SET")) {
             byteBuffer.clear();
             byteBuffer.put("+OK\r\n".getBytes());
@@ -23,20 +25,20 @@ public class ProcessRequest {
             String key = request.getParameter(1);
             String value = request.getParameter(2);
             if(request.getParameterCount() == 3) {
-                Store.put(key, value, -1);
+                MapStore.put(key, value, -1);
             } else {
                 String arg = request.getParameter(3);
                 long expiryTime = Integer.parseInt(request.getParameter(4));
                 if(arg.equals("EX")) {
                     long liveTime = expiryTime * 1000L;
-                    Store.put(key, value, liveTime);
+                    MapStore.put(key, value, liveTime);
                 } else if(arg.equalsIgnoreCase("PX")) {
-                    Store.put(key, value, expiryTime);
+                    MapStore.put(key, value, expiryTime);
                 }
             }
             channel.write(byteBuffer);
         } else if(cmd.equals("GET")) {
-            Optional<String> optionalVal = Store.get(request.getParameter(1));
+            Optional<String> optionalVal = MapStore.get(request.getParameter(1));
             if(optionalVal.isEmpty()) {
                 byteBuffer.clear();
                 byteBuffer.put("$-1\r\n".getBytes());
@@ -45,8 +47,19 @@ public class ProcessRequest {
             } else {
                 Response response = new Response(1);
                 response.add(optionalVal.get());
-                Response.writeResponse(response, channel, byteBuffer);
+                Response.writeResponse(response, byteBuffer);
+                byteBuffer.flip();
+                channel.write(byteBuffer);
             }
+        } else if(cmd.equals("RPUSH")) {
+            String listName = request.getParameter(1);
+            String valueToAppend = request.getParameter(2);
+            ListStore.add(listName, valueToAppend);
+            int listSize = ListStore.size(listName);
+            byteBuffer.clear();
+            byteBuffer.put((":" + listSize + "\r\n").getBytes());
+            byteBuffer.flip();
+            channel.write(byteBuffer);
         }
     }
 }
