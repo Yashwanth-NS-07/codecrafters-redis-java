@@ -54,12 +54,36 @@ public class ProcessRequest {
         } else if(cmd.equals("RPUSH")) {
             String listName = request.getParameter(1);
             for(int i = 2; i < request.getParameterCount(); i++) {
-                String valueToAppend = request.getParameter(2);
+                String valueToAppend = request.getParameter(i);
                 ListStore.add(listName, valueToAppend);
             }
             int listSize = ListStore.size(listName);
             byteBuffer.clear();
             byteBuffer.put((":" + listSize + "\r\n").getBytes());
+            byteBuffer.flip();
+            channel.write(byteBuffer);
+        } else if(cmd.equals("LRANGE")) {
+            String listName = request.getParameter(1);
+            int listSize = ListStore.size(listName);
+            int from = Math.max(
+                    Integer.parseInt(request.getParameter(2)),
+                    0
+            );
+            int to = Math.min(
+                    Integer.parseInt(request.getParameter(3)),
+                    listSize - 1
+            );
+            int pCount = to - from + 1;
+            byteBuffer.clear();
+            if(pCount <= 0) {
+                byteBuffer.put("*0\r\n".getBytes());
+            } else {
+                Response response = new Response(pCount);
+                for (int i = from; i <= to; i++) {
+                    response.add(ListStore.getElement(listName, i));
+                }
+                Response.writeResponse(response, byteBuffer);
+            }
             byteBuffer.flip();
             channel.write(byteBuffer);
         }

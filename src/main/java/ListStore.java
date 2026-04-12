@@ -13,6 +13,12 @@ public class ListStore {
         map.putIfAbsent(listName, new ArrayList<>());
         map.get(listName).add(value);
     }
+    public static boolean isListExists(String listName) {
+        return map.containsKey(listName);
+    }
+    public static String getElement(String listName, int index) {
+        return map.get(listName).get(index);
+    }
     public static int size(String listName) {
         if(map.containsKey(listName)) {
             return map.get(listName).size();
