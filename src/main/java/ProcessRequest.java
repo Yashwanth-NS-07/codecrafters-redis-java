@@ -53,8 +53,10 @@ public class ProcessRequest {
             }
         } else if(cmd.equals("RPUSH")) {
             String listName = request.getParameter(1);
-            String valueToAppend = request.getParameter(2);
-            ListStore.add(listName, valueToAppend);
+            for(int i = 2; i < request.getParameterCount(); i++) {
+                String valueToAppend = request.getParameter(2);
+                ListStore.add(listName, valueToAppend);
+            }
             int listSize = ListStore.size(listName);
             byteBuffer.clear();
             byteBuffer.put((":" + listSize + "\r\n").getBytes());
