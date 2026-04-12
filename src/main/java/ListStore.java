@@ -51,7 +51,7 @@ public class ListStore {
         } else {
             to = Math.max(0, listSize + to);
             if (from < 0) {
-                from = Math.max(0, to + from + 1);
+                from = Math.max(0, listSize + from);
             }
         }
         int pCount = to - from + 1;
