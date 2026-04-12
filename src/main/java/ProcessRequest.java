@@ -72,7 +72,7 @@ public class ProcessRequest {
             } else {
                 to = Math.max(0, listSize + to);
                 if(from < 0) {
-                    from = Math.max(0, to + from);
+                    from = Math.max(0, to + from + 1);
                 }
             }
             int pCount = to - from + 1;
