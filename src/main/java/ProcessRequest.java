@@ -15,7 +15,7 @@ public class ProcessRequest {
             }
             case "ECHO": {
                 String value = request.getParameter(1);
-                String response = String.format("*%d\r\n%s\r\n", value.length(), value);
+                String response = String.format("$%d\r\n%s\r\n", value.length(), value);
                 byteBuffer.put(response.getBytes());
                 break;
             }
