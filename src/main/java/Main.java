@@ -12,7 +12,7 @@ import java.util.concurrent.Executors;
 
 public class Main {
     private static boolean isRunning = true;
-    private static final ExecutorService pool = Executors.newCachedThreadPool();
+    private static final ExecutorService pool = Executors.newFixedThreadPool(3);
 
     public static void main(String[] args) throws IOException {
         System.out.print("Starting Redis server...");
