@@ -3,8 +3,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 public class ProcessRequest {
-    private static final ByteBuffer byteBuffer = ByteBuffer.allocate(1000);
-    public static void process(Request request, SocketChannel channel) throws IOException {
+    public static void process(Request request, SocketChannel channel, ByteBuffer byteBuffer) throws IOException {
         String cmd = request.getParameter(0);
         byteBuffer.clear();
         switch (cmd) {
