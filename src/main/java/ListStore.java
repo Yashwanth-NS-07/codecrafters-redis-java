@@ -20,6 +20,10 @@ public class ListStore {
         return map.get(listName).remove(index);
     }
 
+    private static String removeFirst(String listName) {
+        return map.get(listName).removeFirst();
+    }
+
     private static boolean isListExists(String listName) {
         return map.containsKey(listName);
     }
@@ -56,26 +60,18 @@ public class ListStore {
         if(!isListExists(listName) || size(listName) <= 0) {
             byteBuffer.put("$-1\r\n".getBytes());
             return;
-        }int listSize = size(listName);
-        int from = Integer.parseInt(request.getParameter(2));
-        int to = Integer.parseInt(request.getParameter(3));
-        if (from >= 0 && to >= 0) {
-            to = Math.min(to, listSize - 1);
-        } else {
-            to = Math.max(0, listSize + to);
-            if (from < 0) {
-                from = Math.max(0, listSize + from);
-            }
         }
-        int pCount = to - from + 1;
-        if (pCount <= 0) {
-            byteBuffer.put("*0\r\n".getBytes());
-        } else {
-            ListStore.Response response = new ListStore.Response(pCount);
-            for (int i = from; i <= to; i++) {
-                response.add(remove(listName, i));
-            }
+        int count = Integer.parseInt(request.getParameter(2));
+        ListStore.Response response = new ListStore.Response();
+        while(count-- > 0 && size(listName) > 0) {
+            response.add(removeFirst(listName));
+        }
+        if(request.getParameterCount() <= 0) {
+            byteBuffer.put("$-1\r\n".getBytes());
+        } else if(request.getParameterCount() == 1) {
             writeBulkStringResponse(response, byteBuffer);
+        } else {
+            writeArrayResponse(response, byteBuffer);
         }
     }
 
@@ -100,11 +96,11 @@ public class ListStore {
         if (pCount <= 0) {
             byteBuffer.put("*0\r\n".getBytes());
         } else {
-            ListStore.Response response = new ListStore.Response(pCount);
+            ListStore.Response response = new ListStore.Response();
             for (int i = from; i <= to; i++) {
                 response.add(getElement(listName, i));
             }
-            writeLRangeResponse(response, byteBuffer);
+            writeArrayResponse(response, byteBuffer);
         }
     }
 
@@ -121,7 +117,7 @@ public class ListStore {
         byteBuffer.put((":" + listSize + "\r\n").getBytes());
     }
 
-    private static void writeLRangeResponse(ListStore.Response response, ByteBuffer byteBuffer) {
+    private static void writeArrayResponse(ListStore.Response response, ByteBuffer byteBuffer) {
         int pCount = response.getParameterCount();
         byteBuffer.put(("*" + pCount + "\r\n").getBytes());
         for(int i = 0; i < pCount; i++) {
@@ -133,29 +129,20 @@ public class ListStore {
     }
 
     private static void writeBulkStringResponse(ListStore.Response response, ByteBuffer byteBuffer) {
-        int pCount = response.getParameterCount();
-        if(pCount > 1) {
-            byteBuffer.put(("*" + pCount + "\r\n").getBytes());
-        }
-        for(int i = 0; i < pCount; i++) {
-            String value = response.getParameter(i);
-            byteBuffer.put(("$" + value.length() + "\r\n").getBytes());
-            byteBuffer.put(value.getBytes());
-            byteBuffer.put("\r\n".getBytes());
-        }
+        String value = response.getParameter(0);
+        byteBuffer.put(("$" + value.length() + "\r\n").getBytes());
+        byteBuffer.put(value.getBytes());
+        byteBuffer.put("\r\n".getBytes());
     }
     private static class Response {
 
-        private final int parameterCount;
         private final List<String> parameterList;
 
-        private Response(int parameterCount) {
-            this.parameterCount = parameterCount;
-            this.parameterList = new ArrayList<>(parameterCount);
+        private Response() {
+            this.parameterList = new ArrayList<>();
         }
 
         private void add(String parameter) {
-            assert parameterCount == parameterList.size();
             parameterList.add(parameter);
         }
 
@@ -164,7 +151,7 @@ public class ListStore {
         }
 
         private int getParameterCount() {
-            return this.parameterCount;
+            return this.parameterList.size();
         }
     }
 }
