@@ -61,7 +61,10 @@ public class ListStore {
             byteBuffer.put("$-1\r\n".getBytes());
             return;
         }
-        int count = Integer.parseInt(request.getParameter(2));
+        int count = 1;
+        if(request.getParameterCount() >= 3) {
+            count = Integer.parseInt(request.getParameter(2));
+        }
         ListStore.Response response = new ListStore.Response();
         while(count-- > 0 && size(listName) > 0) {
             response.add(removeFirst(listName));
