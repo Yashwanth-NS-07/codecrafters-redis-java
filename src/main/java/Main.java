@@ -49,16 +49,16 @@ public class Main {
         selector.close();
         System.out.println("done");
     }
-    private static void handleRead(SocketChannel clientSocketChannel) {
+    private static void handleRead(SocketChannel clientSocketChannel) throws IOException {
         Optional<Request> optRequest = Request.readRequest(clientSocketChannel);
         if(optRequest.isEmpty()) return;
         Request request = optRequest.get();
-        CompletableFuture.runAsync(() -> {
-            try {
+//        CompletableFuture.runAsync(() -> {
+//            try {
                 ProcessRequest.process(request, clientSocketChannel);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
+//        });
     }
 }
