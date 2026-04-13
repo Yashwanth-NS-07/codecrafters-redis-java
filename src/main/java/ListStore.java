@@ -69,9 +69,9 @@ public class ListStore {
         while(count-- > 0 && size(listName) > 0) {
             response.add(removeFirst(listName));
         }
-        if(request.getParameterCount() <= 0) {
+        if(response.getParameterCount() <= 0) {
             byteBuffer.put("$-1\r\n".getBytes());
-        } else if(request.getParameterCount() == 1) {
+        } else if(response.getParameterCount() == 1) {
             writeBulkStringResponse(response, byteBuffer);
         } else {
             writeArrayResponse(response, byteBuffer);
