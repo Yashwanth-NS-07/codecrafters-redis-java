@@ -93,7 +93,7 @@ public class ListStore {
         }
         if(remainingTime == 0) remainingTime = 10000 * 10000;
         ListStore.Response response = new ListStore.Response();
-        while(System.currentTimeMillis() - startTimestamp < remainingTime) {
+        while(!listOfLists.isEmpty() && System.currentTimeMillis() - startTimestamp < remainingTime) {
             for(int i = 0; i < listOfLists.size(); ) {
                 String list = listOfLists.get(i);
                 if(size(list) > 0) {
