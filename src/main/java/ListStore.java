@@ -97,6 +97,7 @@ public class ListStore {
             for(int i = 0; i < listOfLists.size(); ) {
                 String list = listOfLists.get(i);
                 if(size(list) > 0) {
+                    response.add(list);
                     response.add(removeFirst(list));
                     listOfLists.remove(i);
                 } else i++;
@@ -107,11 +108,7 @@ public class ListStore {
                 throw new RuntimeException(e);
             }
         }
-        if(response.getParameterCount() == 1) {
-            writeBulkStringResponse(response, byteBuffer);
-        } else {
-            writeArrayResponse(response, byteBuffer);
-        }
+        writeArrayResponse(response, byteBuffer);
     }
 
     public static void handleLRANGE(Request request, ByteBuffer byteBuffer) {
