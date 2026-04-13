@@ -16,6 +16,10 @@ public class ListStore {
         map.get(listName).addFirst(value);
     }
 
+    private static String remove(String listName, int index) {
+        return map.get(listName).remove(index);
+    }
+
     private static boolean isListExists(String listName) {
         return map.containsKey(listName);
     }
@@ -33,7 +37,7 @@ public class ListStore {
         String listName = request.getParameter(1);
         for (int i = 2; i < request.getParameterCount(); i++) {
             String valueToAppend = request.getParameter(i);
-            ListStore.add(listName, valueToAppend);
+            add(listName, valueToAppend);
         }
         writeSizeResponse(listName, byteBuffer);
     }
@@ -42,9 +46,37 @@ public class ListStore {
         String listName = request.getParameter(1);
         for (int i = 2; i < request.getParameterCount(); i++) {
             String valueToAppend = request.getParameter(i);
-            ListStore.addFirst(listName, valueToAppend);
+            addFirst(listName, valueToAppend);
         }
         writeSizeResponse(listName, byteBuffer);
+    }
+
+    public static void handleLPOP(Request request, ByteBuffer byteBuffer) {
+        String listName = request.getParameter(1);
+        if(!isListExists(listName) || size(listName) <= 0) {
+            byteBuffer.put("$-1\r\n".getBytes());
+            return;
+        }int listSize = size(listName);
+        int from = Integer.parseInt(request.getParameter(2));
+        int to = Integer.parseInt(request.getParameter(3));
+        if (from >= 0 && to >= 0) {
+            to = Math.min(to, listSize - 1);
+        } else {
+            to = Math.max(0, listSize + to);
+            if (from < 0) {
+                from = Math.max(0, listSize + from);
+            }
+        }
+        int pCount = to - from + 1;
+        if (pCount <= 0) {
+            byteBuffer.put("*0\r\n".getBytes());
+        } else {
+            ListStore.Response response = new ListStore.Response(pCount);
+            for (int i = from; i <= to; i++) {
+                response.add(remove(listName, i));
+            }
+            writeBulkStringResponse(response, byteBuffer);
+        }
     }
 
     public static void handleLRANGE(Request request, ByteBuffer byteBuffer) {
@@ -92,6 +124,19 @@ public class ListStore {
     private static void writeLRangeResponse(ListStore.Response response, ByteBuffer byteBuffer) {
         int pCount = response.getParameterCount();
         byteBuffer.put(("*" + pCount + "\r\n").getBytes());
+        for(int i = 0; i < pCount; i++) {
+            String value = response.getParameter(i);
+            byteBuffer.put(("$" + value.length() + "\r\n").getBytes());
+            byteBuffer.put(value.getBytes());
+            byteBuffer.put("\r\n".getBytes());
+        }
+    }
+
+    private static void writeBulkStringResponse(ListStore.Response response, ByteBuffer byteBuffer) {
+        int pCount = response.getParameterCount();
+        if(pCount > 1) {
+            byteBuffer.put(("*" + pCount + "\r\n").getBytes());
+        }
         for(int i = 0; i < pCount; i++) {
             String value = response.getParameter(i);
             byteBuffer.put(("$" + value.length() + "\r\n").getBytes());

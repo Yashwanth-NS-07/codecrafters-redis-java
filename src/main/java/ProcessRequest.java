@@ -35,6 +35,10 @@ public class ProcessRequest {
                 ListStore.handleLPUSH(request, byteBuffer);
                 break;
             }
+            case "LPOP": {
+                ListStore.handleLPOP(request, byteBuffer);
+                break;
+            }
             case "LRANGE": {
                 ListStore.handleLRANGE(request, byteBuffer);
                 break;
