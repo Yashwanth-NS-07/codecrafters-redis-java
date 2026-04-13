@@ -78,6 +78,42 @@ public class ListStore {
         }
     }
 
+    public synchronized static void handleBLPOP(Request request, ByteBuffer byteBuffer) {
+        long remainingTime = 0;
+        final long startTimestamp = System.currentTimeMillis();
+        List<String> listOfLists = new ArrayList<>();
+        for(int i = 1; i < request.getParameterCount(); i++) {
+            String val = request.getParameter(i);
+            try {
+                remainingTime = Long.parseLong(val) * 1000;
+                break;
+            } catch (NumberFormatException e) {
+                listOfLists.add(val);
+            }
+        }
+        if(remainingTime == 0) remainingTime = 10000 * 10000;
+        ListStore.Response response = new ListStore.Response();
+        while(System.currentTimeMillis() - startTimestamp < remainingTime) {
+            for(int i = 0; i < listOfLists.size(); ) {
+                String list = listOfLists.get(i);
+                if(size(list) > 0) {
+                    response.add(removeFirst(list));
+                    listOfLists.remove(i);
+                } else i++;
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        if(response.getParameterCount() == 1) {
+            writeBulkStringResponse(response, byteBuffer);
+        } else {
+            writeArrayResponse(response, byteBuffer);
+        }
+    }
+
     public static void handleLRANGE(Request request, ByteBuffer byteBuffer) {
         String listName = request.getParameter(1);
         if(!isListExists(listName)) {

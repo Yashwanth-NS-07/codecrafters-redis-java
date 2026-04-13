@@ -6,6 +6,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 public class Main {
     private static boolean isRunning = true;
@@ -48,10 +49,16 @@ public class Main {
         selector.close();
         System.out.println("done");
     }
-    private static void handleRead(SocketChannel clientSocketChannel) throws IOException {
+    private static void handleRead(SocketChannel clientSocketChannel) {
         Optional<Request> optRequest = Request.readRequest(clientSocketChannel);
         if(optRequest.isEmpty()) return;
         Request request = optRequest.get();
-        ProcessRequest.process(request, clientSocketChannel);
+        CompletableFuture.runAsync(() -> {
+            try {
+                ProcessRequest.process(request, clientSocketChannel);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 }
