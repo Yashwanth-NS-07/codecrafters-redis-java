@@ -3,7 +3,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 public class ProcessRequest {
-    public static void process(Request request, SocketChannel channel, ByteBuffer byteBuffer) throws IOException {
+    private static final ByteBuffer byteBuffer = ByteBuffer.allocate(1000);
+    public static void process(Request request, SocketChannel channel) throws IOException {
         String cmd = request.getParameter(0);
         byteBuffer.clear();
         switch (cmd) {
@@ -39,7 +40,7 @@ public class ProcessRequest {
                 break;
             }
             case "BLPOP": {
-                ListStore.handleBLPOP(request, byteBuffer);
+                ListStore.handleBLPOP(request, byteBuffer, channel);
                 break;
             }
             case "LRANGE": {

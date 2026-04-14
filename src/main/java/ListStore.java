@@ -1,10 +1,15 @@
+import java.awt.datatransfer.FlavorListener;
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 import java.util.*;
 
 public class ListStore {
     private static final Map<String, LinkedList<String>> map;
+    private static final Map<String, LinkedList<BLPOPEntity>> blockingMap;
     static {
         map = new HashMap<>();
+        blockingMap = new HashMap<>();
     }
 
     private static void add(String listName, String value) {
@@ -43,7 +48,25 @@ public class ListStore {
             String valueToAppend = request.getParameter(i);
             add(listName, valueToAppend);
         }
+        // don't reuse this byteBuffer
         writeSizeResponse(listName, byteBuffer);
+
+        if(blockingMap.containsKey(listName) && !blockingMap.get(listName).isEmpty()) {
+            BLPOPEntity entity = blockingMap.get(listName).removeFirst();
+            if(entity.remainingTime < System.currentTimeMillis() - entity.startTime)
+                return;
+            ListStore.Response response = new ListStore.Response();
+            response.add(listName);
+            response.add(removeFirst(listName));
+            ByteBuffer tempByteBuffer = ByteBuffer.allocate(1000);
+            writeArrayResponse(response, tempByteBuffer);
+            try {
+                tempByteBuffer.flip();
+                entity.channel.write(tempByteBuffer);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public static void handleLPUSH(Request request, ByteBuffer byteBuffer) {
@@ -78,9 +101,8 @@ public class ListStore {
         }
     }
 
-    public synchronized static void handleBLPOP(Request request, ByteBuffer byteBuffer) {
+    public static void handleBLPOP(Request request, ByteBuffer byteBuffer, SocketChannel channel) {
         long remainingTime = 0;
-        final long startTimestamp = System.currentTimeMillis();
         List<String> listOfLists = new ArrayList<>();
         for(int i = 1; i < request.getParameterCount(); i++) {
             String val = request.getParameter(i);
@@ -93,22 +115,18 @@ public class ListStore {
         }
         if(remainingTime == 0) remainingTime = 10000 * 10000;
         ListStore.Response response = new ListStore.Response();
-        while(!listOfLists.isEmpty() && System.currentTimeMillis() - startTimestamp < remainingTime) {
-            for(int i = 0; i < listOfLists.size(); ) {
-                String list = listOfLists.get(i);
-                if(size(list) > 0) {
-                    response.add(list);
-                    response.add(removeFirst(list));
-                    listOfLists.remove(i);
-                } else i++;
-            }
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+        for(String listName: listOfLists) {
+            if(isListExists(listName) && size(listName) > 0) {
+                response.add(listName);
+                response.add(removeFirst(listName));
+            } else {
+                blockingMap.putIfAbsent(listName, new LinkedList<>());
+                blockingMap.get(listName).add(new BLPOPEntity(listName, channel, remainingTime));
             }
         }
-        writeArrayResponse(response, byteBuffer);
+        if(response.getParameterCount() > 0) {
+            writeArrayResponse(response, byteBuffer);
+        }
     }
 
     public static void handleLRANGE(Request request, ByteBuffer byteBuffer) {
@@ -188,6 +206,19 @@ public class ListStore {
 
         private int getParameterCount() {
             return this.parameterList.size();
+        }
+    }
+
+    private static class BLPOPEntity {
+        private final long remainingTime;
+        private final long startTime;
+        private final SocketChannel channel;
+        private final String listName;
+        private BLPOPEntity(String listName, SocketChannel channel, long remainingTime) {
+            this.remainingTime = remainingTime;
+            this.startTime = System.currentTimeMillis();
+            this.channel = channel;
+            this.listName = listName;
         }
     }
 }
