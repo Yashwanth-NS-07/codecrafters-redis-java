@@ -107,7 +107,7 @@ public class ListStore {
         for(int i = 1; i < request.getParameterCount(); i++) {
             String val = request.getParameter(i);
             try {
-                remainingTime = Long.parseLong(val) * 1000;
+                remainingTime = (long) (Double.parseDouble(val) * 1000);
                 break;
             } catch (NumberFormatException e) {
                 listOfLists.add(val);
