@@ -46,7 +46,9 @@ public class ListStore {
         String listName = request.getParameter(1);
         for (int i = 2; i < request.getParameterCount(); i++) {
             String valueToAppend = request.getParameter(i);
-            add(listName, valueToAppend);
+            synchronized (ListStore.class) {
+                add(listName, valueToAppend);
+            }
         }
         // don't reuse this byteBuffer
         writeSizeResponse(listName, byteBuffer);
@@ -138,10 +140,12 @@ public class ListStore {
         final String listNameFinal = listName;
         CompletableFuture.runAsync(() -> {
             while(tillTimeFinal > System.currentTimeMillis()) {
-                if(isListExists(listNameFinal) && size(listNameFinal) > 0) {
-                    response.add(listNameFinal);
-                    response.add(removeFirst(listNameFinal));
-                    break;
+                synchronized (ListStore.class) {
+                    if (isListExists(listNameFinal) && size(listNameFinal) > 0) {
+                        response.add(listNameFinal);
+                        response.add(removeFirst(listNameFinal));
+                        break;
+                    }
                 }
             }
             ByteBuffer tempByteBuffer = ByteBuffer.allocate(1000);
