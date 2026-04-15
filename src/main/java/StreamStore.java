@@ -44,7 +44,7 @@ public class StreamStore {
         String[] parts = id.split("-");
         long milli = Long.parseLong(parts[0]);
         int seq = Integer.parseInt(parts[1]);
-        if(milli <= 0 || seq <= 0) {
+        if(milli <= 0 && seq <= 0) {
             byteBuffer.put("-ERR The ID specified in XADD must be greater than 0-0\r\n".getBytes());
             return false;
         }
