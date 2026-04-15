@@ -137,9 +137,15 @@ public class ListStore {
             if(isListExists(listName) && size(listName) > 0) {
                 response.add(listName);
                 response.add(removeFirst(listName));
+                break;
             }
         }
-        writeArrayResponse(response, byteBuffer);
+        if(response.getParameterCount() > 0) {
+            writeArrayResponse(response, byteBuffer);
+        } else {
+            byteBuffer.put("$-1\r\n".getBytes());
+        }
+
     }
 
     public static void handleLRANGE(Request request, ByteBuffer byteBuffer) {
