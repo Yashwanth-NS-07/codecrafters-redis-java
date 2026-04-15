@@ -2,6 +2,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class ListStore {
     private static final Map<String, LinkedList<String>> map;
@@ -133,18 +134,30 @@ public class ListStore {
             return;
         }
         tillTime += System.currentTimeMillis();
-        while(tillTime > System.currentTimeMillis()) {
-            if(isListExists(listName) && size(listName) > 0) {
-                response.add(listName);
-                response.add(removeFirst(listName));
-                break;
+        final long tillTimeFinal = tillTime;
+        final String listNameFinal = listName;
+        CompletableFuture.runAsync(() -> {
+            while(tillTimeFinal > System.currentTimeMillis()) {
+                if(isListExists(listNameFinal) && size(listNameFinal) > 0) {
+                    response.add(listNameFinal);
+                    response.add(removeFirst(listNameFinal));
+                    break;
+                }
             }
-        }
-        if(response.getParameterCount() > 0) {
-            writeArrayResponse(response, byteBuffer);
-        } else {
-            byteBuffer.put("*-1\r\n".getBytes());
-        }
+            ByteBuffer tempByteBuffer = ByteBuffer.allocate(1000);
+            if(response.getParameterCount() > 0) {
+                writeArrayResponse(response, tempByteBuffer);
+            } else {
+                tempByteBuffer.put("*-1\r\n".getBytes());
+            }
+            tempByteBuffer.flip();
+            try {
+                channel.write(tempByteBuffer);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
 
     }
 
