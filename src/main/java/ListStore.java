@@ -133,7 +133,8 @@ public class ListStore {
             return;
         }
         tillTime += System.currentTimeMillis();
-        while(tillTime < System.currentTimeMillis()) {
+        while(tillTime > System.currentTimeMillis()) {
+            System.out.println(System.currentTimeMillis());
             if(isListExists(listName) && size(listName) > 0) {
                 response.add(listName);
                 response.add(removeFirst(listName));
