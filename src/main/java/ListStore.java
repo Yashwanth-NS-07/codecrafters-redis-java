@@ -132,6 +132,7 @@ public class ListStore {
             return;
         }
         if(tillTime == 0) {
+            blockingMap.putIfAbsent(listName, new LinkedList<>());
             blockingMap.get(listName).add(channel);
             return;
         }
