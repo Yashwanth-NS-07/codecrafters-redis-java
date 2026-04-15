@@ -1,4 +1,3 @@
-import java.awt.datatransfer.FlavorListener;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
@@ -6,7 +5,7 @@ import java.util.*;
 
 public class ListStore {
     private static final Map<String, LinkedList<String>> map;
-    private static final Map<String, LinkedList<BLPOPEntity>> blockingMap;
+    private static final Map<String, LinkedList<SocketChannel>> blockingMap;
     static {
         map = new HashMap<>();
         blockingMap = new HashMap<>();
@@ -51,22 +50,8 @@ public class ListStore {
         // don't reuse this byteBuffer
         writeSizeResponse(listName, byteBuffer);
 
-        if(blockingMap.containsKey(listName) && !blockingMap.get(listName).isEmpty()) {
-            BLPOPEntity entity = blockingMap.get(listName).removeFirst();
-            if(entity.remainingTime < System.currentTimeMillis() - entity.startTime)
-                return;
-            ListStore.Response response = new ListStore.Response();
-            response.add(listName);
-            response.add(removeFirst(listName));
-            ByteBuffer tempByteBuffer = ByteBuffer.allocate(1000);
-            writeArrayResponse(response, tempByteBuffer);
-            try {
-                tempByteBuffer.flip();
-                entity.channel.write(tempByteBuffer);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
+        checkInBlockingMap(listName);
+
     }
 
     public static void handleLPUSH(Request request, ByteBuffer byteBuffer) {
@@ -76,6 +61,25 @@ public class ListStore {
             addFirst(listName, valueToAppend);
         }
         writeSizeResponse(listName, byteBuffer);
+        checkInBlockingMap(listName);
+    }
+
+    private static void checkInBlockingMap(String listName) {
+        // indefinite blocks response
+        if(blockingMap.containsKey(listName) && !blockingMap.get(listName).isEmpty()) {
+            SocketChannel channel = blockingMap.get(listName).removeFirst();
+            ListStore.Response response = new ListStore.Response();
+            response.add(listName);
+            response.add(removeFirst(listName));
+            ByteBuffer tempByteBuffer = ByteBuffer.allocate(1000);
+            writeArrayResponse(response, tempByteBuffer);
+            try {
+                tempByteBuffer.flip();
+                channel.write(tempByteBuffer);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public static void handleLPOP(Request request, ByteBuffer byteBuffer) {
@@ -102,31 +106,40 @@ public class ListStore {
     }
 
     public static void handleBLPOP(Request request, ByteBuffer byteBuffer, SocketChannel channel) {
-        long remainingTime = 0;
-        List<String> listOfLists = new ArrayList<>();
-        for(int i = 1; i < request.getParameterCount(); i++) {
+        long tillTime = 0;
+        String listName = null;
+        ListStore.Response response = new ListStore.Response();
+        for(int i = 1; i < request.getParameterCount() &&  i < 3; i++) {
             String val = request.getParameter(i);
             try {
-                remainingTime = (long) (Double.parseDouble(val) * 1000);
+                tillTime = (long) (Double.parseDouble(val) * 1000);
                 break;
             } catch (NumberFormatException e) {
-                listOfLists.add(val);
+                listName = val;
+                if(isListExists(listName) && size(listName) > 0) {
+                    response.add(listName);
+                    response.add(removeFirst(listName));
+                    break;
+                }
             }
         }
-        if(remainingTime == 0) remainingTime = 10000 * 10000;
-        ListStore.Response response = new ListStore.Response();
-        for(String listName: listOfLists) {
+
+        if(response.getParameterCount() > 0) {
+            writeArrayResponse(response, byteBuffer);
+            return;
+        }
+        if(tillTime == 0) {
+            blockingMap.get(listName).add(channel);
+            return;
+        }
+        tillTime += System.currentTimeMillis();
+        while(tillTime < System.currentTimeMillis()) {
             if(isListExists(listName) && size(listName) > 0) {
                 response.add(listName);
                 response.add(removeFirst(listName));
-            } else {
-                blockingMap.putIfAbsent(listName, new LinkedList<>());
-                blockingMap.get(listName).add(new BLPOPEntity(listName, channel, remainingTime));
             }
         }
-        if(response.getParameterCount() > 0) {
-            writeArrayResponse(response, byteBuffer);
-        }
+        writeArrayResponse(response, byteBuffer);
     }
 
     public static void handleLRANGE(Request request, ByteBuffer byteBuffer) {
@@ -206,19 +219,6 @@ public class ListStore {
 
         private int getParameterCount() {
             return this.parameterList.size();
-        }
-    }
-
-    private static class BLPOPEntity {
-        private final long remainingTime;
-        private final long startTime;
-        private final SocketChannel channel;
-        private final String listName;
-        private BLPOPEntity(String listName, SocketChannel channel, long remainingTime) {
-            this.remainingTime = remainingTime;
-            this.startTime = System.currentTimeMillis();
-            this.channel = channel;
-            this.listName = listName;
         }
     }
 }
