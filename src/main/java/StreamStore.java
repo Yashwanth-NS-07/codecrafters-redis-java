@@ -44,6 +44,11 @@ public class StreamStore {
         String[] parts = id.split("-");
         long milli = Long.parseLong(parts[0]);
         int seq = Integer.parseInt(parts[1]);
+        if(milli <= 0 || seq <= 0) {
+            byteBuffer.put("-ERR The ID specified in XADD must be greater than 0-0\r\n".getBytes());
+            return false;
+        }
+
         if(isStreamExists(streamName)) {
             String lastId = getLast(streamName).get("Id");
             String[] lastRecordParts = lastId.split("-");
@@ -51,11 +56,6 @@ public class StreamStore {
             int lastRecordSeq = Integer.parseInt(lastRecordParts[1]);
             if((milli < lastRecordMilli) || (milli == lastRecordMilli && seq <= lastRecordSeq)) {
                 byteBuffer.put("-ERR The ID specified in XADD is equal or smaller than the target stream top item\r\n".getBytes());
-                return false;
-            }
-        } else {
-            if(milli <= 0 || seq <= 0) {
-                byteBuffer.put("-ERR The ID specified in XADD must be greater than 0-0\r\n".getBytes());
                 return false;
             }
         }
