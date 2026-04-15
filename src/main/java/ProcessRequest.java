@@ -67,6 +67,8 @@ public class ProcessRequest {
         } else if(ListStore.isListExists(key)) {
             byteBuffer.put("+list\r\n".getBytes());
             return;
+        } else if(StreamStore.isStreamExists(key)) {
+            byteBuffer.put("+stream\r\n".getBytes());
         } else {
             byteBuffer.put("+none\r\n".getBytes());
         }
