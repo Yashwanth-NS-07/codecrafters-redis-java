@@ -1,7 +1,5 @@
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class StreamStore {
     private static final Map<String, List<Map<String, String>>> stream;
@@ -14,7 +12,8 @@ public class StreamStore {
     }
 
     private static void put(String streamName, Map<String, String> values) {
-
+        stream.putIfAbsent(streamName, new ArrayList<>());
+        stream.get(streamName).add(values);
     }
 
     public static void handleXADD(Request request, ByteBuffer byteBuffer) {
