@@ -51,6 +51,9 @@ public class ProcessRequest {
                 ListStore.handleLLEN(request, byteBuffer);
                 break;
             }
+            case "XADD": {
+                StreamStore.handleXADD(request, byteBuffer);
+            }
             case "TYPE": {
                 handleTYPE(request);
             }

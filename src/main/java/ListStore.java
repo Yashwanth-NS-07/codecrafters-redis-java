@@ -71,11 +71,11 @@ public class ListStore {
         // indefinite blocks response
         if(blockingMap.containsKey(listName) && !blockingMap.get(listName).isEmpty()) {
             SocketChannel channel = blockingMap.get(listName).removeFirst();
-            ListStore.Response response = new ListStore.Response();
+            Response response = new Response();
             response.add(listName);
             response.add(removeFirst(listName));
             ByteBuffer tempByteBuffer = ByteBuffer.allocate(1000);
-            writeArrayResponse(response, tempByteBuffer);
+            ResponseUtils.writeArrayResponse(response, tempByteBuffer);
             try {
                 tempByteBuffer.flip();
                 channel.write(tempByteBuffer);
@@ -95,23 +95,23 @@ public class ListStore {
         if(request.getParameterCount() >= 3) {
             count = Integer.parseInt(request.getParameter(2));
         }
-        ListStore.Response response = new ListStore.Response();
+        Response response = new Response();
         while(count-- > 0 && size(listName) > 0) {
             response.add(removeFirst(listName));
         }
         if(response.getParameterCount() <= 0) {
             byteBuffer.put("*-1\r\n".getBytes());
         } else if(response.getParameterCount() == 1) {
-            writeBulkStringResponse(response, byteBuffer);
+            ResponseUtils.writeBulkStringResponse(response, byteBuffer);
         } else {
-            writeArrayResponse(response, byteBuffer);
+            ResponseUtils.writeArrayResponse(response, byteBuffer);
         }
     }
 
     public static void handleBLPOP(Request request, ByteBuffer byteBuffer, SocketChannel channel) {
         long tillTime = 0;
         String listName = null;
-        ListStore.Response response = new ListStore.Response();
+        Response response = new Response();
         for(int i = 1; i < request.getParameterCount() &&  i < 3; i++) {
             String val = request.getParameter(i);
             try {
@@ -128,7 +128,7 @@ public class ListStore {
         }
 
         if(response.getParameterCount() > 0) {
-            writeArrayResponse(response, byteBuffer);
+            ResponseUtils.writeArrayResponse(response, byteBuffer);
             return;
         }
         if(tillTime == 0) {
@@ -151,7 +151,7 @@ public class ListStore {
             }
             ByteBuffer tempByteBuffer = ByteBuffer.allocate(1000);
             if(response.getParameterCount() > 0) {
-                writeArrayResponse(response, tempByteBuffer);
+                ResponseUtils.writeArrayResponse(response, tempByteBuffer);
             } else {
                 tempByteBuffer.put("*-1\r\n".getBytes());
             }
@@ -187,11 +187,11 @@ public class ListStore {
         if (pCount <= 0) {
             byteBuffer.put("*0\r\n".getBytes());
         } else {
-            ListStore.Response response = new ListStore.Response();
+            Response response = new Response();
             for (int i = from; i <= to; i++) {
                 response.add(getElement(listName, i));
             }
-            writeArrayResponse(response, byteBuffer);
+            ResponseUtils.writeArrayResponse(response, byteBuffer);
         }
     }
 
@@ -208,41 +208,5 @@ public class ListStore {
         byteBuffer.put((":" + listSize + "\r\n").getBytes());
     }
 
-    private static void writeArrayResponse(ListStore.Response response, ByteBuffer byteBuffer) {
-        int pCount = response.getParameterCount();
-        byteBuffer.put(("*" + pCount + "\r\n").getBytes());
-        for(int i = 0; i < pCount; i++) {
-            String value = response.getParameter(i);
-            byteBuffer.put(("$" + value.length() + "\r\n").getBytes());
-            byteBuffer.put(value.getBytes());
-            byteBuffer.put("\r\n".getBytes());
-        }
-    }
 
-    private static void writeBulkStringResponse(ListStore.Response response, ByteBuffer byteBuffer) {
-        String value = response.getParameter(0);
-        byteBuffer.put(("$" + value.length() + "\r\n").getBytes());
-        byteBuffer.put(value.getBytes());
-        byteBuffer.put("\r\n".getBytes());
-    }
-    private static class Response {
-
-        private final List<String> parameterList;
-
-        private Response() {
-            this.parameterList = new ArrayList<>();
-        }
-
-        private void add(String parameter) {
-            parameterList.add(parameter);
-        }
-
-        private String getParameter(int i) {
-            return parameterList.get(i);
-        }
-
-        private int getParameterCount() {
-            return this.parameterList.size();
-        }
-    }
 }
