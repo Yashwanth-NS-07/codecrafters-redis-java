@@ -53,6 +53,7 @@ public class ProcessRequest {
             }
             case "XADD": {
                 StreamStore.handleXADD(request, byteBuffer);
+                break;
             }
             case "TYPE": {
                 handleTYPE(request);
