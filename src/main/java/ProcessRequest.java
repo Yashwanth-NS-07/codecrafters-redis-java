@@ -49,9 +49,26 @@ public class ProcessRequest {
             }
             case "LLEN": {
                 ListStore.handleLLEN(request, byteBuffer);
+                break;
+            }
+            case "TYPE": {
+                handleTYPE(request);
             }
         }
         byteBuffer.flip();
         channel.write(byteBuffer);
+    }
+
+    private static void handleTYPE(Request request) {
+        String key = request.getParameter(1);
+        if(MapStore.isKeyExists(key)) {
+            byteBuffer.put("+string\r\n".getBytes());
+            return;
+        } else if(ListStore.isListExists(key)) {
+            byteBuffer.put("+list\r\n".getBytes());
+            return;
+        } else {
+            byteBuffer.put("+none\r\n".getBytes());
+        }
     }
 }

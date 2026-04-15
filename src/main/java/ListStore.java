@@ -29,7 +29,7 @@ public class ListStore {
         return map.get(listName).removeFirst();
     }
 
-    private static boolean isListExists(String listName) {
+    public static boolean isListExists(String listName) {
         return map.containsKey(listName);
     }
     private static String getElement(String listName, int index) {

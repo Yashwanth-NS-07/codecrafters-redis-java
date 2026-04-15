@@ -7,6 +7,10 @@ public class MapStore {
     static {
         map = new HashMap<>();
     }
+    public static boolean isKeyExists(String key) {
+        return map.containsKey(key);
+    }
+
     private static void put(String key, String value, long liveTime) {
         map.put(key, new Value(value, liveTime));
     }
