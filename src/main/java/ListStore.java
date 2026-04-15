@@ -97,7 +97,7 @@ public class ListStore {
             response.add(removeFirst(listName));
         }
         if(response.getParameterCount() <= 0) {
-            byteBuffer.put("$-1\r\n".getBytes());
+            byteBuffer.put("*-1\r\n".getBytes());
         } else if(response.getParameterCount() == 1) {
             writeBulkStringResponse(response, byteBuffer);
         } else {
@@ -143,7 +143,7 @@ public class ListStore {
         if(response.getParameterCount() > 0) {
             writeArrayResponse(response, byteBuffer);
         } else {
-            byteBuffer.put("$-1\r\n".getBytes());
+            byteBuffer.put("*-1\r\n".getBytes());
         }
 
     }
