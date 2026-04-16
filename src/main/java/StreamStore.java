@@ -24,7 +24,9 @@ public class StreamStore {
     public static void handleXADD(Request request, ByteBuffer byteBuffer) {
         String streamName = request.getParameter(1);
         String id = request.getParameter(2);
-        if(!isIdProper(streamName, id, byteBuffer)) {
+        if(id.contains("*")) {
+            id = generateId(streamName, id);
+        } else if(!isIdProper(streamName, id, byteBuffer)) {
             return;
         }
         Map<String, String> map = new HashMap<>();
@@ -60,5 +62,32 @@ public class StreamStore {
             }
         }
         return true;
+    }
+
+    private static String generateId(String streamName, String id) {
+        String[] parts = id.split("-");
+        if("*".equals(parts[0]) && "*".equals(parts[1])) {
+            return id;
+        } else {
+            long milli = Long.parseLong(parts[0]);
+            int seq = 0;
+            if(isStreamExists(streamName)) {
+                String lastId = getLast(streamName).get("Id");
+                String[] lastRecordParts = lastId.split("-");
+                long lastRecordMilli = Long.parseLong(lastRecordParts[0]);
+                int lastRecordSeq = Integer.parseInt(lastRecordParts[1]);
+                assert milli < lastRecordMilli;
+                if(milli == lastRecordMilli) {
+                    seq = lastRecordSeq + 1;
+                } else {
+                    seq = 0;
+                }
+                return milli + "-" + seq;
+            } else {
+                if(milli == 0) seq = 1;
+                else seq = 0;
+                return milli + "-" + seq;
+            }
+        }
     }
 }
