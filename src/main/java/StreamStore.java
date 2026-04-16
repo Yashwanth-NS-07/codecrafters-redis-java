@@ -67,7 +67,27 @@ public class StreamStore {
     private static String generateId(String streamName, String id) {
         String[] parts = id.split("-");
         if("*".equals(parts[0]) && "*".equals(parts[1])) {
-            return id;
+            long milli;
+            int seq;
+            long currentMilli = System.currentTimeMillis();
+            if(isStreamExists(streamName)) {
+                String lastId = getLast(streamName).get("Id");
+                String[] lastRecordParts = lastId.split("-");
+                long lastRecordMilli = Long.parseLong(lastRecordParts[0]);
+                int lastRecordSeq = Integer.parseInt(lastRecordParts[1]);
+                assert  currentMilli < lastRecordMilli;
+                if(currentMilli == lastRecordMilli) {
+                    seq = lastRecordSeq + 1;
+                    milli = currentMilli;
+                } else {
+                    milli = currentMilli;
+                    seq = 0;
+                }
+            } else {
+                milli = currentMilli;
+                seq = 0;
+            }
+            return milli + "-" + seq;
         } else {
             long milli = Long.parseLong(parts[0]);
             int seq = 0;
@@ -82,12 +102,11 @@ public class StreamStore {
                 } else {
                     seq = 0;
                 }
-                return milli + "-" + seq;
             } else {
                 if(milli == 0) seq = 1;
                 else seq = 0;
-                return milli + "-" + seq;
             }
+            return milli + "-" + seq;
         }
     }
 }
