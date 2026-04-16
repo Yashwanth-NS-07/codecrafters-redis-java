@@ -66,7 +66,7 @@ public class StreamStore {
 
     private static String generateId(String streamName, String id) {
         String[] parts = id.split("-");
-        if("*".equals(parts[0]) && "*".equals(parts[1])) {
+        if("*".equals(parts[0])) {
             long milli;
             int seq;
             long currentMilli = System.currentTimeMillis();
