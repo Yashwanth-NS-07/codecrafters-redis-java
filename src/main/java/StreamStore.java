@@ -105,6 +105,7 @@ public class StreamStore {
         while(start - 1 >= 0 && getRecord(streamName, start - 1).get().id.milli >= target.milli) {
             start--;
         }
+        while(getRecord(streamName, start).get().id.seq < target.seq) start++;
         return start;
     }
 
