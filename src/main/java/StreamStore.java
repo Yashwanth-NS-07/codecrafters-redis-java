@@ -63,7 +63,9 @@ public class StreamStore {
         } else if(from.length() == 1 && from.contains("-")) {
             from = "0-0";
         }
-        if(!to.contains("-")) {
+        if(to.contains("+")) {
+            to = Integer.MAX_VALUE + "-" + Integer.MAX_VALUE;
+        } else if(!to.contains("-")) {
             to = to + "-" + Integer.MAX_VALUE;
         }
         Record.Id fromId = new Record.Id(from);
