@@ -55,6 +55,9 @@ public class ProcessRequest {
                 StreamStore.handleXADD(request, byteBuffer);
                 break;
             }
+            case "XRANGE": {
+                StreamStore.handleXRANGE(request, byteBuffer);
+            }
             case "TYPE": {
                 handleTYPE(request);
             }

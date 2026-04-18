@@ -3,17 +3,17 @@ import java.util.List;
 
 public class Response {
 
-    private final List<String> parameterList;
+    private final List<Object> parameterList;
 
     public Response() {
         this.parameterList = new ArrayList<>();
     }
 
-    public void add(String parameter) {
+    public void add(Object parameter) {
         parameterList.add(parameter);
     }
 
-    public String getParameter(int i) {
+    public Object getParameter(int i) {
         return parameterList.get(i);
     }
 
