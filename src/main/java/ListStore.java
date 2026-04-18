@@ -44,17 +44,15 @@ public class ListStore {
 
     public static void handleRPUSH(Request request, ByteBuffer byteBuffer) {
         String listName = request.getParameter(1);
-        for (int i = 2; i < request.getParameterCount(); i++) {
-            String valueToAppend = request.getParameter(i);
-            synchronized (ListStore.class) {
+        synchronized (ListStore.class) {
+            for (int i = 2; i < request.getParameterCount(); i++) {
+                String valueToAppend = request.getParameter(i);
                 add(listName, valueToAppend);
             }
+            writeSizeResponse(listName, byteBuffer);
         }
         // don't reuse this byteBuffer
-        writeSizeResponse(listName, byteBuffer);
-
         checkInBlockingMap(listName);
-
     }
 
     public static void handleLPUSH(Request request, ByteBuffer byteBuffer) {
