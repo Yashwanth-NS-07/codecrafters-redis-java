@@ -72,7 +72,13 @@ public class StreamStore {
         int indexOfFromId = getIndexOfIdGreaterThanOrEqual(streamName, fromId);
         for(int i = indexOfFromId; i < getStreamSize(streamName); i++) {
             Record record = getRecord(streamName, i).get();
-            if(record.id.milli > toId.milli) {
+            if(
+                    record.id.milli > toId.milli ||
+                    (
+                            record.id.milli == toId.milli &&
+                            record.id.seq > toId.seq
+                    )
+            ) {
                 break;
             }
             Response resp = new Response();
