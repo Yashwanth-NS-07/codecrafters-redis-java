@@ -59,7 +59,11 @@ public class StreamStore {
         String from = request.getParameter(2);
         String to = request.getParameter(3);
         if(!from.contains("-")) {
-            from = from + "-0";
+            if(from.length() == 1) {
+                from = "0-0";
+            } else {
+                from = from + "-0";
+            }
         }
         if(!to.contains("-")) {
             to = to + "-" + Integer.MAX_VALUE;
