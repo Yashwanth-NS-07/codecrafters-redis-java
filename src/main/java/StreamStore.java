@@ -63,7 +63,11 @@ public class StreamStore {
         Response response = new Response();
         for(int i = 2; i < request.getParameterCount() - 1; i++) {
             String streamName = request.getParameter(i);
-            response.add(getResponseFromToId(streamName, fromId, toId));
+            Response streamResponse = new Response();
+            streamResponse.add(streamName);
+            streamResponse.add(getResponseFromToId(streamName, fromId, toId));
+
+            response.add(streamResponse);
         }
         ResponseUtils.writeArrayResponse(response, byteBuffer);
     }
