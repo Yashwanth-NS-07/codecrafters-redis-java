@@ -54,32 +54,61 @@ public class StreamStore {
         ResponseUtils.writeBulkStringResponse(response, byteBuffer);
     }
 
+    public static void handleXREAD(Request request, ByteBuffer byteBuffer) {
+        String from = request.getParameter(request.getParameterCount() - 1);
+        from = finalFrom(from);
+        String to = finalTo("+"); // maximum to
+        Record.Id fromId = new Record.Id(from);
+        Record.Id toId = new Record.Id(to);
+        Response response = new Response();
+        for(int i = 2; i < request.getParameterCount() - 1; i++) {
+            String streamName = request.getParameter(i);
+            response.add(getResponseFromToId(streamName, fromId, toId));
+        }
+        ResponseUtils.writeArrayResponse(response, byteBuffer);
+    }
+
     public static void handleXRANGE(Request request, ByteBuffer byteBuffer) {
         String streamName = request.getParameter(1);
         String from = request.getParameter(2);
         String to = request.getParameter(3);
+        from = finalFrom(from);
+        to = finalTo(to);
+        Record.Id fromId = new Record.Id(from);
+        Record.Id toId = new Record.Id(to);
+        Response response = getResponseFromToId(streamName, fromId, toId);
+        ResponseUtils.writeArrayResponse(response, byteBuffer);
+    }
+
+    private static String finalFrom(String from) {
         if(!from.contains("-")) {
             from = from + "-0";
         } else if(from.length() == 1 && from.contains("-")) {
             from = "0-0";
         }
+        return from;
+    }
+
+    private static String finalTo(String to) {
         if(to.contains("+")) {
-            to = Integer.MAX_VALUE + "-" + Integer.MAX_VALUE;
+            to = Long.MAX_VALUE + "-" + Integer.MAX_VALUE;
         } else if(!to.contains("-")) {
             to = to + "-" + Integer.MAX_VALUE;
         }
-        Record.Id fromId = new Record.Id(from);
-        Record.Id toId = new Record.Id(to);
-        Response response = new Response();
+        return to;
+    }
+
+    private static Response getResponseFromToId(String streamName, Record.Id fromId, Record.Id toId) {
+        Response response  = new Response();
         int indexOfFromId = getIndexOfIdGreaterThanOrEqual(streamName, fromId);
         for(int i = indexOfFromId; i < getStreamSize(streamName); i++) {
             Record record = getRecord(streamName, i).get();
             if(
                     record.id.milli > toId.milli ||
-                    (
-                            record.id.milli == toId.milli &&
-                            record.id.seq > toId.seq
-                    )
+                            (
+                                    record.id.milli == toId.milli &&
+                                            record.id.seq > toId.seq
+                            )
             ) {
                 break;
             }
@@ -93,7 +122,7 @@ public class StreamStore {
             resp.add(resp1);
             response.add(resp);
         }
-        ResponseUtils.writeArrayResponse(response, byteBuffer);
+        return response;
     }
 
     private static int getIndexOfIdGreaterThanOrEqual(String streamName, Record.Id target) {
