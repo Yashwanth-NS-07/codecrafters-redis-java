@@ -55,14 +55,18 @@ public class StreamStore {
     }
 
     public static void handleXREAD(Request request, ByteBuffer byteBuffer) {
-        String from = request.getParameter(request.getParameterCount() - 1);
-        from = finalFrom(from);
+
         String to = finalTo("+"); // maximum to
-        Record.Id fromId = new Record.Id(from);
         Record.Id toId = new Record.Id(to);
         Response response = new Response();
-        for(int i = 2; i < request.getParameterCount() - 1; i++) {
+        int keyCount = ((request.getParameterCount() - 1) / 2);
+        for(int i = 2; i < keyCount + 2; i++) {
             String streamName = request.getParameter(i);
+
+            String from = request.getParameter(i + keyCount);
+            from = finalFrom(from);
+            Record.Id fromId = new Record.Id(from);
+
             Response streamResponse = new Response();
             streamResponse.add(streamName);
             streamResponse.add(getResponseFromToId(streamName, fromId, toId));
