@@ -214,7 +214,10 @@ public class StreamStore {
             start--;
         }
         System.out.println("here");
-        while(getRecord(streamName, start).get().id.seq < target.seq) start++;
+        while(getRecord(streamName, start).get().id.seq < target.seq) {
+            if(start + 1 < getStreamSize(streamName)) start++;
+            else return -1;
+        }
 
         System.out.println("start index: " +  start);
         return start;
