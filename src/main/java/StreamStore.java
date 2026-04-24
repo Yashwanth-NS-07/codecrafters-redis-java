@@ -156,6 +156,7 @@ public class StreamStore {
     private static Response getResponseFromToId(String streamName, Record.Id fromId, Record.Id toId) {
         Response response  = new Response();
         int indexOfFromId = getIndexOfIdGreaterThanOrEqual(streamName, fromId);
+        System.out.println("index of from id: " + indexOfFromId);
         for(int i = indexOfFromId; i < getStreamSize(streamName); i++) {
             Record record = getRecord(streamName, i).get();
             if(
