@@ -88,6 +88,7 @@ public class StreamStore {
 
         String streamName = request.getParameter(4);
         String from = finalFrom(request.getParameter(5));
+        from = incrementSeqByOne(from);
         String to = finalTo("+");
         Record.Id fromId = new Record.Id(from);
         Record.Id toId = new Record.Id(to);
@@ -96,10 +97,13 @@ public class StreamStore {
             ByteBuffer tempByteBuffer = ByteBuffer.allocate(1000);
             Response response = new Response();
             synchronized (ListStore.class) {
+                Response streamResponse = new Response();
+                streamResponse.add(streamName);
                 while(System.currentTimeMillis() < millis) {
                     Response response1 = getResponseFromToId(streamName, fromId, toId);
                     if(response1.getParameterCount() > 0) {
-                        response.add(response1);
+                        streamResponse.add(response1);
+                        response.add(streamResponse);
                         break;
                     }
                 }
@@ -124,6 +128,11 @@ public class StreamStore {
         Record.Id toId = new Record.Id(to);
         Response response = getResponseFromToId(streamName, fromId, toId);
         ResponseUtils.writeArrayResponse(response, byteBuffer);
+    }
+
+    private static String incrementSeqByOne(String id) {
+        String[] parts = id.split("-");
+        return parts[0] + "-" + (Integer.parseInt(parts[1]) + 1);
     }
 
     private static String finalFrom(String from) {
