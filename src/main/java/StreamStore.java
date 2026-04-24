@@ -162,6 +162,8 @@ public class StreamStore {
         System.out.println("inside get respoine from id");
         Response response  = new Response();
         int indexOfFromId = getIndexOfIdGreaterThanOrEqual(streamName, fromId);
+        if(indexOfFromId == -1) return response;
+
         System.out.println("index of from id: " + indexOfFromId);
         for(int i = indexOfFromId; i < getStreamSize(streamName); i++) {
             Record record = getRecord(streamName, i).get();
@@ -190,6 +192,7 @@ public class StreamStore {
     private static int getIndexOfIdGreaterThanOrEqual(String streamName, Record.Id target) {
         // not handling when end = -1;
         int start = 0, end = getStreamSize(streamName) - 1;
+        if(end <= -1) return -1;
 
         System.out.println("start: " + start);
         System.out.println("end: " + end);
@@ -210,6 +213,7 @@ public class StreamStore {
         while(start - 1 >= 0 && getRecord(streamName, start - 1).get().id.milli >= target.milli) {
             start--;
         }
+        System.out.println("here");
         while(getRecord(streamName, start).get().id.seq < target.seq) start++;
 
         System.out.println("start index: " +  start);
