@@ -190,6 +190,9 @@ public class StreamStore {
     private static int getIndexOfIdGreaterThanOrEqual(String streamName, Record.Id target) {
         // not handling when end = -1;
         int start = 0, end = getStreamSize(streamName) - 1;
+
+        System.out.println("start: " + start);
+        System.out.println("end: " + end);
         while(start < end) {
             int mid = (start + end) >> 1;
             System.out.println("MId: " + mid);
