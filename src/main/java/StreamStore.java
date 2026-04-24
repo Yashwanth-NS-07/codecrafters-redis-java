@@ -84,7 +84,12 @@ public class StreamStore {
     }
 
     private static void handleBLOCKXREAD(Request request, ByteBuffer byteBuffer, SocketChannel channel) {
-        final long millis = System.currentTimeMillis() + Long.parseLong(request.getParameter(2));
+        long millis = Long.parseLong(request.getParameter(2));
+        if(millis == 0) {
+            millis = Long.MAX_VALUE;
+        } else {
+            millis += System.currentTimeMillis();
+        }
 
         String streamName = request.getParameter(4);
         String from = finalFrom(request.getParameter(5));
@@ -97,9 +102,7 @@ public class StreamStore {
         CompletableFuture.runAsync(() -> {
             ByteBuffer tempByteBuffer = ByteBuffer.allocate(1000);
             Response response = new Response();
-            System.out.println("inside async");
             synchronized (ListStore.class) {
-                System.out.println("inside synchr");
                 Response streamResponse = new Response();
                 streamResponse.add(streamName);
                 while(System.currentTimeMillis() < millis) {
@@ -107,7 +110,6 @@ public class StreamStore {
                     if(response1.getParameterCount() > 0) {
                         streamResponse.add(response1);
                         response.add(streamResponse);
-                        System.out.println("breaking");
                         break;
                     }
                 }
