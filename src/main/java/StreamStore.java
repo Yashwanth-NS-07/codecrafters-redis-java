@@ -88,7 +88,8 @@ public class StreamStore {
 
         String streamName = request.getParameter(4);
         String from = finalFrom(request.getParameter(5));
-//        from = incrementSeqByOne(from);
+        from = incrementSeqByOne(from);
+        System.out.println("From: " + from);
         String to = finalTo("+");
         Record.Id fromId = new Record.Id(from);
         Record.Id toId = new Record.Id(to);
