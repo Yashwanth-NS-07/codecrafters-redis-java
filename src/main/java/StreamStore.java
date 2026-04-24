@@ -103,7 +103,6 @@ public class StreamStore {
                 Response streamResponse = new Response();
                 streamResponse.add(streamName);
                 while(System.currentTimeMillis() < millis) {
-                    System.out.println("inside while");
                     Response response1 = getResponseFromToId(streamName, fromId, toId);
                     if(response1.getParameterCount() > 0) {
                         streamResponse.add(response1);
@@ -159,12 +158,10 @@ public class StreamStore {
     }
 
     private static Response getResponseFromToId(String streamName, Record.Id fromId, Record.Id toId) {
-        System.out.println("inside get respoine from id");
         Response response  = new Response();
         int indexOfFromId = getIndexOfIdGreaterThanOrEqual(streamName, fromId);
         if(indexOfFromId == -1) return response;
 
-        System.out.println("index of from id: " + indexOfFromId);
         for(int i = indexOfFromId; i < getStreamSize(streamName); i++) {
             Record record = getRecord(streamName, i).get();
             if(
@@ -194,11 +191,8 @@ public class StreamStore {
         int start = 0, end = getStreamSize(streamName) - 1;
         if(end <= -1) return -1;
 
-        System.out.println("start: " + start);
-        System.out.println("end: " + end);
         while(start < end) {
             int mid = (start + end) >> 1;
-            System.out.println("MId: " + mid);
             Record.Id midRecordId = getRecord(streamName, mid).get().id;
             if(midRecordId.milli == target.milli) {
                 start = mid;
@@ -213,13 +207,11 @@ public class StreamStore {
         while(start - 1 >= 0 && getRecord(streamName, start - 1).get().id.milli >= target.milli) {
             start--;
         }
-        System.out.println("here");
         while(getRecord(streamName, start).get().id.seq < target.seq) {
             if(start + 1 < getStreamSize(streamName)) start++;
             else return -1;
         }
 
-        System.out.println("start index: " +  start);
         return start;
     }
 
