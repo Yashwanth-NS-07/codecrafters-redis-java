@@ -191,6 +191,7 @@ public class StreamStore {
         int start = 0, end = getStreamSize(streamName) - 1;
         while(start < end) {
             int mid = (start + end) >> 1;
+            System.out.println("MId: " + mid);
             Record.Id midRecordId = getRecord(streamName, mid).get().id;
             if(midRecordId.milli == target.milli) {
                 start = mid;
@@ -206,6 +207,8 @@ public class StreamStore {
             start--;
         }
         while(getRecord(streamName, start).get().id.seq < target.seq) start++;
+
+        System.out.println("start index: " +  start);
         return start;
     }
 
