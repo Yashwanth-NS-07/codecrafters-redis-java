@@ -1,5 +1,8 @@
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class StreamStore {
     private static final Map<String, List<Record>> stream;
@@ -54,8 +57,12 @@ public class StreamStore {
         ResponseUtils.writeBulkStringResponse(response, byteBuffer);
     }
 
-    public static void handleXREAD(Request request, ByteBuffer byteBuffer) {
+    public static void handleXREAD(Request request, ByteBuffer byteBuffer, SocketChannel channel) {
 
+        if("BLOCK".equalsIgnoreCase(request.getParameter(1))) {
+            handleBLOCKXREAD(request, byteBuffer, channel);
+            return;
+        }
         String to = finalTo("+"); // maximum to
         Record.Id toId = new Record.Id(to);
         Response response = new Response();
@@ -74,6 +81,37 @@ public class StreamStore {
             response.add(streamResponse);
         }
         ResponseUtils.writeArrayResponse(response, byteBuffer);
+    }
+
+    private static void handleBLOCKXREAD(Request request, ByteBuffer byteBuffer, SocketChannel channel) {
+        final long millis = System.currentTimeMillis() + Long.parseLong(request.getParameter(2));
+
+        String streamName = request.getParameter(4);
+        String from = finalFrom(request.getParameter(5));
+        String to = finalTo("+");
+        Record.Id fromId = new Record.Id(from);
+        Record.Id toId = new Record.Id(to);
+
+        CompletableFuture.runAsync(() -> {
+            ByteBuffer tempByteBuffer = ByteBuffer.allocate(1000);
+            Response response = new Response();
+            synchronized (ListStore.class) {
+                while(System.currentTimeMillis() < millis) {
+                    Response response1 = getResponseFromToId(streamName, fromId, toId);
+                    if(response1.getParameterCount() > 0) {
+                        response.add(response1);
+                        break;
+                    }
+                }
+            }
+            ResponseUtils.writeArrayResponse(response, tempByteBuffer);
+            tempByteBuffer.flip();
+            try {
+                channel.write(tempByteBuffer);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     public static void handleXRANGE(Request request, ByteBuffer byteBuffer) {

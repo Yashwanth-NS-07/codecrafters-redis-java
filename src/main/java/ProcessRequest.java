@@ -60,7 +60,7 @@ public class ProcessRequest {
                 break;
             }
             case "XREAD": {
-                StreamStore.handleXREAD(request, byteBuffer);
+                StreamStore.handleXREAD(request, byteBuffer, channel);
                 break;
             }
             case "TYPE": {

@@ -3,6 +3,12 @@ import java.nio.ByteBuffer;
 public class ResponseUtils {
     public static void writeArrayResponse(Response response, ByteBuffer byteBuffer) {
         int pCount = response.getParameterCount();
+
+        if(pCount == 0) {
+            byteBuffer.put(("*-1\r\n").getBytes());
+            return;
+        }
+
         byteBuffer.put(("*" + pCount + "\r\n").getBytes());
         for(int i = 0; i < pCount; i++) {
             Object value = response.getParameter(i);
