@@ -107,6 +107,7 @@ public class StreamStore {
                     if(response1.getParameterCount() > 0) {
                         streamResponse.add(response1);
                         response.add(streamResponse);
+                        System.out.println("breaking");
                         break;
                     }
                 }
