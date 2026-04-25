@@ -116,6 +116,11 @@ public class MapStore {
         return "+OK\r\n";
     }
 
+    public static String handleUNWATCH(Request request) {
+        keysToWatch.remove(request.getSocketAddress());
+        return "+OK\r\n";
+    }
+
     private static String writeResponse(MapStore.Response response) {
         int pCount = response.getParameterCount();
         if(pCount > 1) {
