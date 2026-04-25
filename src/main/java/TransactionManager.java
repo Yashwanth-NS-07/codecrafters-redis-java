@@ -61,6 +61,7 @@ public class TransactionManager {
             writeToChannel("*0\r\n", channel);
             return;
         } else if(MapStore.isKeysModified(channel.getRemoteAddress())) {
+            MapStore.removeClientFromWatch(channel.getRemoteAddress());
             writeToChannel("*-1\r\n", channel);
             return;
         }

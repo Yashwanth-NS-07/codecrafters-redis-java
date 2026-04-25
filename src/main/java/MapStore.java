@@ -1,3 +1,4 @@
+import javax.naming.ldap.SortKey;
 import java.net.SocketAddress;
 import java.util.*;
 
@@ -114,6 +115,10 @@ public class MapStore {
             keysToWatch.get(request.getSocketAddress()).put(key, value);
         }
         return "+OK\r\n";
+    }
+
+    public static void removeClientFromWatch(SocketAddress socketAddress) {
+        keysToWatch.remove(socketAddress);
     }
 
     public static String handleUNWATCH(Request request) {
