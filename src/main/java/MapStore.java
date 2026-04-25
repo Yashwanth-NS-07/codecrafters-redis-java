@@ -87,6 +87,10 @@ public class MapStore {
         }
     }
 
+    public static String handleWATCH(Request request) {
+        return "+OK\r\n";
+    }
+
     private static String writeResponse(MapStore.Response response) {
         int pCount = response.getParameterCount();
         if(pCount > 1) {

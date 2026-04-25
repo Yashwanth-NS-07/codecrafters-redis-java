@@ -22,6 +22,9 @@ public class ProcessRequest {
             case "INCR": {
                 return MapStore.handleINCR(request);
             }
+            case "WATCH": {
+                return MapStore.handleWATCH(request);
+            }
             case "RPUSH": {
                 return ListStore.handleRPUSH(request);
             }
