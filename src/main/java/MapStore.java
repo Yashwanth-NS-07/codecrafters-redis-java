@@ -43,6 +43,7 @@ public class MapStore {
             System.out.println("is in keys to watch: "+ keysToWatch.containsKey(request.getSocketAddress()));
             if(keysToWatch.containsKey(request.getSocketAddress())) {
                 Set<String> keys = keysToWatch.get(request.getSocketAddress());
+                System.out.println("is key present to watch: "+ keys.contains(key));
                 if(keys.contains(key)) {
                     throw new AbortTransaction("Key is being watched");
                 }
