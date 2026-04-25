@@ -70,7 +70,7 @@ public class TransactionManager {
             try {
                 sb.append(ProcessRequest.process(request, channel));
             } catch(AbortTransaction ate) {
-                writeToChannel("-1\r\n", channel);
+                writeToChannel("*-1\r\n", channel);
                 return;
             }
         }
