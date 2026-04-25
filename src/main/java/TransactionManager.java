@@ -43,12 +43,14 @@ public class TransactionManager {
             writeToChannel("*0\r\n", channel);
             return;
         }
-        Response response = new Response();
+        StringBuilder sb = new StringBuilder();
+        sb.append('*');
+        sb.append(requests.size());
+        sb.append("\r\n");
         for(Request request: requests) {
-            response.add(ProcessRequest.process(request, channel));
+            sb.append(ProcessRequest.process(request, channel));
         }
-        String responseString = ResponseUtils.writeArrayResponse(response);
-        writeToChannel(responseString, channel);
+        writeToChannel(sb.toString(), channel);
     }
 
     private static void writeToChannel(String value, SocketChannel channel) throws IOException {
