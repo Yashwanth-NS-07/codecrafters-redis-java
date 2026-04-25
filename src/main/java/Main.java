@@ -14,10 +14,14 @@ public class Main {
     private static final ExecutorService pool = Executors.newCachedThreadPool();
 
     public static void main(String[] args) throws IOException {
+        int port = 6379;
+        if(args.length > 0) {
+            port = Integer.parseInt(args[1]);
+        }
         System.out.print("Starting Redis server...");
         ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.configureBlocking(false);
-        serverSocketChannel.bind(new InetSocketAddress(6379));
+        serverSocketChannel.bind(new InetSocketAddress(port));
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.print("Stopping Redis server...");
