@@ -43,7 +43,15 @@ public class TransactionManager {
     }
 
     private static void processAllQueuedRequest(SocketChannel channel) throws IOException {
-        for(Request request: transactions.get(channel.getRemoteAddress())) {
+        List<Request> requests = transactions.get(channel.getRemoteAddress());
+        if(requests.isEmpty()) {
+            ByteBuffer tempByteBuffer = ByteBuffer.allocate(5);
+            tempByteBuffer.put("*0\r\n".getBytes());
+            tempByteBuffer.flip();
+            channel.write(tempByteBuffer);
+            return;
+        }
+        for(Request request: requests) {
             ProcessRequest.process(request, channel);
         }
     }
