@@ -42,8 +42,8 @@ public class MapStore {
             if(keysToWatch.containsKey(request.getSocketAddress())) {
                 Map<String, String> keys = keysToWatch.get(request.getSocketAddress());
                 // checking if the key is modified
-                if(map.containsKey(key)) {
-                    String expectedValue = map.get(key).value.toString();
+                if(keys.containsKey(key)) {
+                    String expectedValue = keys.get(key);
                     String currentValue = get(key).get().toString();
                     if(expectedValue.equals(currentValue)) {
                         throw new AbortTransaction("Key has been modified");
