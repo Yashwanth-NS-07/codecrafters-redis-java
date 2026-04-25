@@ -17,7 +17,17 @@ public class TransactionManager {
             tempByteBuffer.flip();
             channel.write(tempByteBuffer);
             return;
+        } else if(
+                "EXEC".equalsIgnoreCase(request.getParameter(0)) &&
+                !transactions.containsKey(channel.getRemoteAddress())
+        ) {
+                ByteBuffer tempByteBuffer = ByteBuffer.allocate(10);
+                tempByteBuffer.put("-ERR EXEC without MULTI\r\n".getBytes());
+                tempByteBuffer.flip();
+                channel.write(tempByteBuffer);
+                return;
         }
+
         // checking if the client is having ongoing transaction
         SocketAddress clientAddress = channel.getRemoteAddress();
         if(transactions.containsKey(clientAddress)) {
