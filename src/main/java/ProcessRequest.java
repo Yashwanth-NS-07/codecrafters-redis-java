@@ -25,6 +25,9 @@ public class ProcessRequest {
             case "WATCH": {
                 return MapStore.handleWATCH(request);
             }
+            case "UNWATCH": {
+                return MapStore.handleUNWATCH(request);
+            }
             case "RPUSH": {
                 return ListStore.handleRPUSH(request);
             }
