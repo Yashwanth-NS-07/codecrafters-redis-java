@@ -33,6 +33,7 @@ public class TransactionManager {
                     return;
                 }
                 transactions.remove(clientAddress);
+                MapStore.removeClientFromWatch(clientAddress);
                 writeToChannel("+OK\r\n", channel);
                 return;
             }
