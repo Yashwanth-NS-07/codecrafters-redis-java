@@ -3,7 +3,7 @@ import java.util.*;
 
 public class MapStore {
     private static final Map<String, Value> map;
-    private static final Map<SocketAddress, Set<String>> keysToWatch;
+    private static final Map<SocketAddress, Map<String, String>> keysToWatch;
     static {
         map = new HashMap<>();
         keysToWatch = new HashMap<>();
@@ -37,17 +37,17 @@ public class MapStore {
         String key = request.getParameter(1);
         String value = request.getParameter(2);
 
-        System.out.println("isExecuted by Tran: " + request.isExecutedByTransaction());
         if(request.isExecutedByTransaction()) {
             // checking if this key is being watched
-            System.out.println("is in keys to watch: "+ keysToWatch.containsKey(request.getSocketAddress()));
             if(keysToWatch.containsKey(request.getSocketAddress())) {
-                Set<String> keys = keysToWatch.get(request.getSocketAddress());
-                System.out.println(request.getSocketAddress());
-                System.out.println(key);
-                System.out.println("is key present to watch: "+ keys.contains(key));
-                if(keys.contains(key)) {
-                    throw new AbortTransaction("Key is being watched");
+                Map<String, String> keys = keysToWatch.get(request.getSocketAddress());
+                // checking if the key is modified
+                if(map.containsKey(key)) {
+                    String expectedValue = map.get(key).value.toString();
+                    String currentValue = get(key).get().toString();
+                    if(expectedValue.equals(currentValue)) {
+                        throw new AbortTransaction("Key has been modified");
+                    }
                 }
             }
         }
@@ -106,10 +106,8 @@ public class MapStore {
     public static String handleWATCH(Request request) {
         String key = request.getParameter(1);
         System.out.println("Key: "+ key);
-        keysToWatch.putIfAbsent(request.getSocketAddress(), new HashSet<>());
-        keysToWatch.get(request.getSocketAddress()).add(key);
-        System.out.println(request.getSocketAddress());
-        System.out.println(keysToWatch.get(request.getSocketAddress()));
+        keysToWatch.putIfAbsent(request.getSocketAddress(), new HashMap<>());
+        keysToWatch.get(request.getSocketAddress()).put(key, get(key).get().toString());
         return "+OK\r\n";
     }
 
