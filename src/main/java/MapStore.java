@@ -11,11 +11,11 @@ public class MapStore {
         return map.containsKey(key);
     }
 
-    private static void put(String key, String value, long liveTime) {
+    private static void put(String key, Object value, long liveTime) {
         map.put(key, new Value(value, liveTime));
     }
 
-    private static Optional<String> get(String key) {
+    private static Optional<Object> get(String key) {
         if(map.containsKey(key)) {
             Value value = map.get(key);
             if(value.liveTime == -1) {
@@ -35,6 +35,7 @@ public class MapStore {
     public static void handleSet(Request request, ByteBuffer byteBuffer) {
         String key = request.getParameter(1);
         String value = request.getParameter(2);
+
         if(request.getParameterCount() == 3) {
             put(key, value, -1);
         } else {
@@ -50,13 +51,38 @@ public class MapStore {
         byteBuffer.put("+OK\r\n".getBytes());
     }
 
+    public static void handleINCR(Request request, ByteBuffer byteBuffer) {
+        String key = request.getParameter(1);
+        Optional<Object> optionalVal =  get(key);
+        int num = 1;
+        if(optionalVal.isPresent()) {
+            Object val = optionalVal.get();
+            if(val instanceof String s) {
+                try {
+                    num = Integer.parseInt(s) + 1;
+                    put(key, num, -1);
+                } catch (NumberFormatException e) {
+                    throw new RuntimeException(e);
+                }
+            } else if(val instanceof Integer i) {
+                num = i + 1;
+                put(key, num, -1);
+            } else {
+                throw new IllegalArgumentException("Unknown type of INCR option");
+            }
+        } else {
+            put(key, num, -1);
+        }
+        byteBuffer.put((":" + num + "\r\n").getBytes());
+    }
+
     public static void handleGet(Request request, ByteBuffer byteBuffer) {
-        Optional<String> optionalVal = get(request.getParameter(1));
+        Optional<Object> optionalVal = get(request.getParameter(1));
         if(optionalVal.isEmpty()) {
             byteBuffer.put("$-1\r\n".getBytes());
         } else {
             MapStore.Response response = new MapStore.Response(1);
-            response.add(optionalVal.get());
+            response.add(optionalVal.get().toString());
             writeResponse(response, byteBuffer);
         }
     }
@@ -101,9 +127,9 @@ public class MapStore {
     private static class Value {
         private final long timestamp;
         private final long liveTime;
-        private final String value;
+        private final Object value;
         // liveTime value expected in millis
-        public Value(String value,long liveTime) {
+        public Value(Object value,long liveTime) {
             this.value = value;
             this.liveTime = liveTime;
             this.timestamp = System.currentTimeMillis();

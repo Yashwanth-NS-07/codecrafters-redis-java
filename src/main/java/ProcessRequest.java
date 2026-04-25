@@ -27,6 +27,10 @@ public class ProcessRequest {
                 MapStore.handleGet(request, byteBuffer);
                 break;
             }
+            case "INCR": {
+                MapStore.handleINCR(request, byteBuffer);
+                break;
+            }
             case "RPUSH": {
                 ListStore.handleRPUSH(request, byteBuffer);
                 break;
