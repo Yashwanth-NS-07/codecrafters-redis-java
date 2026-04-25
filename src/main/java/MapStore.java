@@ -93,7 +93,8 @@ public class MapStore {
             Map<String, String> keysAndExpectedValues = keysToWatch.get(socketAddress);
             for(Map.Entry<String, String> entry: keysAndExpectedValues.entrySet()) {
                 String key = entry.getKey();
-                String expectedValue = keysAndExpectedValues.get(key);
+                String expectedValue = entry.getValue();
+                System.out.println(key);
                 String currentValue = get(key).get().toString();
                 if(!expectedValue.equals(currentValue)) {
                     return true;
