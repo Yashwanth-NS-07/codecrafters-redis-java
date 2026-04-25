@@ -93,6 +93,9 @@ public class StreamStore {
 
         String streamName = request.getParameter(4);
         String from = finalFrom(request.getParameter(5));
+        if(from.contains("$")) {
+            from = getLast(streamName).id.toString();
+        }
         from = incrementSeqByOne(from);
         String to = finalTo("+");
         Record.Id fromId = new Record.Id(from);
@@ -300,6 +303,11 @@ public class StreamStore {
                 String[] idParts = id.split("-");
                 this.milli = Long.parseLong(idParts[0]);
                 this.seq = Integer.parseInt(idParts[1]);
+            }
+
+            @Override
+            public String toString() {
+                return milli + "-" + seq;
             }
         }
     }
