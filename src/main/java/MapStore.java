@@ -40,7 +40,7 @@ public class MapStore {
         if(request.isExecutedByTransaction()) {
             // checking if this key is being watched
             if(keysToWatch.containsKey(request.getSocketAddress())) {
-                Set<String> keys = keysToWatch.get(key);
+                Set<String> keys = keysToWatch.get(request.getSocketAddress());
                 if(keys.contains(key)) {
                     throw new AbortTransaction("Key is being watched");
                 }
