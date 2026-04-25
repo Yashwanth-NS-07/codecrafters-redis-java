@@ -52,13 +52,13 @@ public class Main {
         System.out.println("done");
     }
     private static void handleRead(SocketChannel clientSocketChannel) {
-            Optional<Request> optRequest = Request.readRequest(clientSocketChannel);
-            if(optRequest.isEmpty()) return;
-            Request request = optRequest.get();
-            try {
-                ProcessRequest.process(request, clientSocketChannel);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-}
+        Optional<Request> optRequest = Request.readRequest(clientSocketChannel);
+        if(optRequest.isEmpty()) return;
+        Request request = optRequest.get();
+        try {
+            TransactionManager.handleRequest(request, clientSocketChannel);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
