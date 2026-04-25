@@ -105,7 +105,11 @@ public class MapStore {
         String key = request.getParameter(1);
         System.out.println("Key: "+ key);
         keysToWatch.putIfAbsent(request.getSocketAddress(), new HashMap<>());
-        keysToWatch.get(request.getSocketAddress()).put(key, get(key).get().toString());
+        String value = "-1";
+        if(get(key).isPresent()) {
+            value = get(key).get().toString();
+        }
+        keysToWatch.get(request.getSocketAddress()).put(key, value);
         return "+OK\r\n";
     }
 
