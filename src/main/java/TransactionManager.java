@@ -21,7 +21,7 @@ public class TransactionManager {
                 "EXEC".equalsIgnoreCase(request.getParameter(0)) &&
                 !transactions.containsKey(channel.getRemoteAddress())
         ) {
-                ByteBuffer tempByteBuffer = ByteBuffer.allocate(10);
+                ByteBuffer tempByteBuffer = ByteBuffer.allocate(50);
                 tempByteBuffer.put("-ERR EXEC without MULTI\r\n".getBytes());
                 tempByteBuffer.flip();
                 channel.write(tempByteBuffer);
