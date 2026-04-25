@@ -88,28 +88,31 @@ public class MapStore {
         }
     }
 
-    public static boolean isKeyModified(Request request) {
-        if(keysToWatch.containsKey(request.getSocketAddress())) {
-            Map<String, String> keysAndExpectedValues = keysToWatch.get(request.getSocketAddress());
-            String key = keysAndExpectedValues.keySet().stream().toList().get(0);
-            String expectedValue = keysAndExpectedValues.get(key);
-            String currentValue = get(key).get().toString();
-            if(!expectedValue.equals(currentValue)) {
-                return true;
+    public static boolean isKeysModified(SocketAddress socketAddress) {
+        if(keysToWatch.containsKey(socketAddress)) {
+            Map<String, String> keysAndExpectedValues = keysToWatch.get(socketAddress);
+            for(Map.Entry<String, String> entry: keysAndExpectedValues.entrySet()) {
+                String key = entry.getKey();
+                String expectedValue = keysAndExpectedValues.get(key);
+                String currentValue = get(key).get().toString();
+                if(!expectedValue.equals(currentValue)) {
+                    return true;
+                }
             }
         }
         return false;
     }
 
     public static String handleWATCH(Request request) {
-        String key = request.getParameter(1);
-        System.out.println("Key: "+ key);
         keysToWatch.putIfAbsent(request.getSocketAddress(), new HashMap<>());
-        String value = "-1";
-        if(get(key).isPresent()) {
-            value = get(key).get().toString();
+        for(int i = 0; i < request.getParameterCount(); i++) {
+            String key = request.getParameter(i);
+            String value = "-1";
+            if(get(key).isPresent()) {
+                value = get(key).get().toString();
+            }
+            keysToWatch.get(request.getSocketAddress()).put(key, value);
         }
-        keysToWatch.get(request.getSocketAddress()).put(key, value);
         return "+OK\r\n";
     }
 

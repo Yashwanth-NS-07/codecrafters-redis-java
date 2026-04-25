@@ -60,7 +60,7 @@ public class TransactionManager {
         if(requests.isEmpty()) {
             writeToChannel("*0\r\n", channel);
             return;
-        } else if(MapStore.isKeyModified(requests.get(0))) {
+        } else if(MapStore.isKeysModified(channel.getRemoteAddress())) {
             writeToChannel("*-1\r\n", channel);
             return;
         }
