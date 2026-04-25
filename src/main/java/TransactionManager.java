@@ -36,6 +36,12 @@ public class TransactionManager {
                 writeToChannel("+OK\r\n", channel);
                 return;
             }
+            case "WATCH": {
+                if(transactions.containsKey(clientAddress)) {
+                    writeToChannel("-ERR WATCH inside MULTI is not allowed\r\n", channel);
+                    return;
+                }
+            }
             default: {
                 if(transactions.containsKey(clientAddress)) {
                     // queuing
