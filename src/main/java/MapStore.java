@@ -62,7 +62,7 @@ public class MapStore {
                     num = Integer.parseInt(s) + 1;
                     put(key, num, -1);
                 } catch (NumberFormatException e) {
-                    throw new RuntimeException(e);
+                    byteBuffer.put("-ERR value is not an integer or out of range\r\n".getBytes());
                 }
             } else if(val instanceof Integer i) {
                 num = i + 1;
