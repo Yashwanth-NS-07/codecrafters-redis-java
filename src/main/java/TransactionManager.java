@@ -50,7 +50,6 @@ public class TransactionManager {
     private static void writeToChannel(String value, SocketChannel channel) throws IOException {
         Objects.requireNonNull(value);
         ByteBuffer byteBuffer = ByteBuffer.wrap(value.getBytes());
-        byteBuffer.flip();
         while(byteBuffer.hasRemaining()) {
             channel.write(byteBuffer);
         }
