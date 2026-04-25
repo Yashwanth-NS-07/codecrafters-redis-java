@@ -23,8 +23,7 @@ public class ProcessRequest {
                 return MapStore.handleINCR(request);
             }
             case "RPUSH": {
-                ListStore.handleRPUSH(request);
-                break;
+                return ListStore.handleRPUSH(request);
             }
             case "LPUSH": {
                 ListStore.handleLPUSH(request);
