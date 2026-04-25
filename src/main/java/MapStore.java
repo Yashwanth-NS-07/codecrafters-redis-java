@@ -103,8 +103,10 @@ public class MapStore {
 
     public static String handleWATCH(Request request) {
         String key = request.getParameter(1);
+        System.out.println("Key: "+ key);
         keysToWatch.putIfAbsent(request.getSocketAddress(), new HashSet<>());
         keysToWatch.get(request.getSocketAddress()).add(key);
+        System.out.println(keysToWatch.get(request.getSocketAddress()));
         return "+OK\r\n";
     }
 
