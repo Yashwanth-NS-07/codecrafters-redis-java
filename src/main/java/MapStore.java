@@ -1,11 +1,12 @@
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import java.net.SocketAddress;
 import java.util.*;
 
 public class MapStore {
     private static final Map<String, Value> map;
+    private static final Map<SocketAddress, Set<String>> keysToWatch;
     static {
         map = new HashMap<>();
+        keysToWatch = new HashMap<>();
     }
     public static boolean isKeyExists(String key) {
         return map.containsKey(key);
@@ -35,6 +36,16 @@ public class MapStore {
     public static String handleSet(Request request) {
         String key = request.getParameter(1);
         String value = request.getParameter(2);
+
+        if(request.isExecutedByTransaction()) {
+            // checking if this key is being watched
+            if(keysToWatch.containsKey(request.getSocketAddress())) {
+                Set<String> keys = keysToWatch.get(key);
+                if(keys.contains(key)) {
+                    throw new AbortTransaction("Key is being watched");
+                }
+            }
+        }
 
         if(request.getParameterCount() == 3) {
             put(key, value, -1);
@@ -88,6 +99,9 @@ public class MapStore {
     }
 
     public static String handleWATCH(Request request) {
+        String key = request.getParameter(1);
+        keysToWatch.putIfAbsent(request.getSocketAddress(), new HashSet<>());
+        keysToWatch.get(request.getSocketAddress()).add(key);
         return "+OK\r\n";
     }
 

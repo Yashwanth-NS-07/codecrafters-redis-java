@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
@@ -8,10 +9,26 @@ import java.util.Optional;
 public class Request {
     private final int parameterCount;
     private final List<String> parameterList;
+    private boolean isExecutedByTransaction;
+    private final SocketAddress socketAddress;
 
-    private Request(int parameterCount) {
+    private Request(int parameterCount, SocketAddress address) {
         this.parameterCount = parameterCount;
         this.parameterList = new ArrayList<>(parameterCount);
+        this.isExecutedByTransaction = false;
+        this.socketAddress = address;
+    }
+
+    public void setExecutedByTransaction(boolean isExecutedByTransaction) {
+        this.isExecutedByTransaction = isExecutedByTransaction;
+    }
+
+    public boolean isExecutedByTransaction() {
+        return this.isExecutedByTransaction;
+    }
+
+    public SocketAddress getSocketAddress() {
+        return this.socketAddress;
     }
     private static final ByteBuffer byteBuffer = ByteBuffer.allocate(1000);
     public static Optional<Request> readRequest(SocketChannel channel) {
@@ -39,7 +56,7 @@ public class Request {
                 }
             }
             if(pCount <= 0) return Optional.empty();
-            Request request = new Request(pCount);
+            Request request = new Request(pCount, channel.getRemoteAddress());
             for(int i = 0; i < pCount; i++) {
                 // skipping $ character
                 byteBuffer.get();

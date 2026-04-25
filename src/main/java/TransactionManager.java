@@ -66,7 +66,13 @@ public class TransactionManager {
         sb.append(requests.size());
         sb.append("\r\n");
         for(Request request: requests) {
-            sb.append(ProcessRequest.process(request, channel));
+            request.setExecutedByTransaction(true);
+            try {
+                sb.append(ProcessRequest.process(request, channel));
+            } catch(AbortTransaction ate) {
+                writeToChannel("-1\r\n", channel);
+                return;
+            }
         }
         writeToChannel(sb.toString(), channel);
     }
