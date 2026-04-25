@@ -37,26 +37,6 @@ public class MapStore {
         String key = request.getParameter(1);
         String value = request.getParameter(2);
 
-        if(request.isExecutedByTransaction()) {
-            // checking if this key is being watched
-            if(keysToWatch.containsKey(request.getSocketAddress())) {
-                Map<String, String> keys = keysToWatch.get(request.getSocketAddress());
-                // checking if the key is modified
-                System.out.println(key);
-                System.out.println(keys);
-                System.out.println("keys.containsKey(key): " + keys.containsKey(key));
-                if(keys.containsKey(key)) {
-                    String expectedValue = keys.get(key);
-                    System.out.println("expectedValue: " + expectedValue);
-                    String currentValue = get(key).get().toString();
-                    System.out.println("currentValue: "+ currentValue);
-                    if(!expectedValue.equals(currentValue)) {
-                        throw new AbortTransaction("Key has been modified");
-                    }
-                }
-            }
-        }
-
         if(request.getParameterCount() == 3) {
             put(key, value, -1);
         } else {
@@ -106,6 +86,19 @@ public class MapStore {
             response.add(optionalVal.get().toString());
             return writeResponse(response);
         }
+    }
+
+    public static boolean isKeyModified(Request request) {
+        if(keysToWatch.containsKey(request.getSocketAddress())) {
+            Map<String, String> keysAndExpectedValues = keysToWatch.get(request.getSocketAddress());
+            String key = keysAndExpectedValues.keySet().stream().toList().get(0);
+            String expectedValue = keysAndExpectedValues.get(key);
+            String currentValue = get(key).get().toString();
+            if(!expectedValue.equals(currentValue)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static String handleWATCH(Request request) {

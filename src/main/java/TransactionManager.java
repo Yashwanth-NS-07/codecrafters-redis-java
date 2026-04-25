@@ -60,19 +60,17 @@ public class TransactionManager {
         if(requests.isEmpty()) {
             writeToChannel("*0\r\n", channel);
             return;
+        } else if(MapStore.isKeyModified(requests.get(0))) {
+            writeToChannel("*-1\r\n", channel);
+            return;
         }
         StringBuilder sb = new StringBuilder();
         sb.append('*');
         sb.append(requests.size());
         sb.append("\r\n");
+
         for(Request request: requests) {
-            request.setExecutedByTransaction(true);
-            try {
-                sb.append(ProcessRequest.process(request, channel));
-            } catch(AbortTransaction ate) {
-                writeToChannel("*-1\r\n", channel);
-                return;
-            }
+            sb.append(ProcessRequest.process(request, channel));
         }
         writeToChannel(sb.toString(), channel);
     }
