@@ -94,7 +94,6 @@ public class MapStore {
             for(Map.Entry<String, String> entry: keysAndExpectedValues.entrySet()) {
                 String key = entry.getKey();
                 String expectedValue = entry.getValue();
-                System.out.println(key);
                 String currentValue = get(key).get().toString();
                 if(!expectedValue.equals(currentValue)) {
                     return true;
@@ -106,7 +105,7 @@ public class MapStore {
 
     public static String handleWATCH(Request request) {
         keysToWatch.putIfAbsent(request.getSocketAddress(), new HashMap<>());
-        for(int i = 0; i < request.getParameterCount(); i++) {
+        for(int i = 1; i < request.getParameterCount(); i++) {
             String key = request.getParameter(i);
             String value = "-1";
             if(get(key).isPresent()) {
