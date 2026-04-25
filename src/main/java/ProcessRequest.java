@@ -56,7 +56,6 @@ public class ProcessRequest {
                 throw new IllegalArgumentException("Unknow Operation");
             }
         }
-        return null;
     }
 
     private static String handleTYPE(Request request) {
