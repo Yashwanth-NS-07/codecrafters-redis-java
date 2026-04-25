@@ -44,6 +44,7 @@ public class TransactionManager {
 
     private static void processAllQueuedRequest(SocketChannel channel) throws IOException {
         List<Request> requests = transactions.get(channel.getRemoteAddress());
+        transactions.remove(channel.getRemoteAddress());
         if(requests.isEmpty()) {
             ByteBuffer tempByteBuffer = ByteBuffer.allocate(5);
             tempByteBuffer.put("*0\r\n".getBytes());
