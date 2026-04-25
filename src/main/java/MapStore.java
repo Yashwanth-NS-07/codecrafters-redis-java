@@ -32,7 +32,7 @@ public class MapStore {
         return Optional.empty();
     }
 
-    public static void handleSet(Request request, ByteBuffer byteBuffer) {
+    public static String handleSet(Request request) {
         String key = request.getParameter(1);
         String value = request.getParameter(2);
 
@@ -48,10 +48,10 @@ public class MapStore {
                 put(key, value, expiryTime);
             }
         }
-        byteBuffer.put("+OK\r\n".getBytes());
+        return "+OK\r\n";
     }
 
-    public static void handleINCR(Request request, ByteBuffer byteBuffer) {
+    public static String handleINCR(Request request) {
         String key = request.getParameter(1);
         Optional<Object> optionalVal =  get(key);
         int num = 1;
@@ -62,8 +62,7 @@ public class MapStore {
                     num = Integer.parseInt(s) + 1;
                     put(key, num, -1);
                 } catch (NumberFormatException e) {
-                    byteBuffer.put("-ERR value is not an integer or out of range\r\n".getBytes());
-                    return;
+                    return "-ERR value is not an integer or out of range\r\n";
                 }
             } else if(val instanceof Integer i) {
                 num = i + 1;
@@ -74,31 +73,33 @@ public class MapStore {
         } else {
             put(key, num, -1);
         }
-        byteBuffer.put((":" + num + "\r\n").getBytes());
+        return ":" + num + "\r\n";
     }
 
-    public static void handleGet(Request request, ByteBuffer byteBuffer) {
+    public static String handleGet(Request request) {
         Optional<Object> optionalVal = get(request.getParameter(1));
         if(optionalVal.isEmpty()) {
-            byteBuffer.put("$-1\r\n".getBytes());
+            return "$-1\r\n";
         } else {
             MapStore.Response response = new MapStore.Response(1);
             response.add(optionalVal.get().toString());
-            writeResponse(response, byteBuffer);
+            return writeResponse(response);
         }
     }
 
-    private static void writeResponse(MapStore.Response response, ByteBuffer byteBuffer) {
+    private static String writeResponse(MapStore.Response response) {
         int pCount = response.getParameterCount();
         if(pCount > 1) {
-            byteBuffer.put(("*" + pCount + "\r\n").getBytes());
+            return "*" + pCount + "\r\n";
         }
+        StringBuilder sb = new StringBuilder();
         for(int i = 0; i < pCount; i++) {
             String value = response.getParameter(i);
-            byteBuffer.put(("$" + value.length() + "\r\n").getBytes());
-            byteBuffer.put(value.getBytes());
-            byteBuffer.put("\r\n".getBytes());
+            sb.append(("$" + value.length() + "\r\n"));
+            sb.append(value);
+            sb.append("\r\n");
         }
+        return sb.toString();
     }
 
     private static class Response {

@@ -1,33 +1,34 @@
-import java.nio.ByteBuffer;
-
 public class ResponseUtils {
-    public static void writeArrayResponse(Response response, ByteBuffer byteBuffer) {
+    public static String writeArrayResponse(Response response) {
         int pCount = response.getParameterCount();
 
         if(pCount == 0) {
-            byteBuffer.put(("*-1\r\n").getBytes());
-            return;
+            return "*-1\r\n";
         }
 
-        byteBuffer.put(("*" + pCount + "\r\n").getBytes());
+        StringBuilder sb = new StringBuilder();
+        sb.append(("*" + pCount + "\r\n"));
         for(int i = 0; i < pCount; i++) {
             Object value = response.getParameter(i);
             if(value instanceof String s) {
-                byteBuffer.put(("$" + s.length() + "\r\n").getBytes());
-                byteBuffer.put(s.getBytes());
-                byteBuffer.put("\r\n".getBytes());
+                sb.append("$" + s.length() + "\r\n");
+                sb.append(s);
+                sb.append("\r\n");
             } else if(value instanceof Response r) {
-                writeArrayResponse(r, byteBuffer);
+                sb.append(writeArrayResponse(r));
             } else {
                 throw new RuntimeException("Unknown type in response object");
             }
         }
+        return sb.toString();
     }
 
-    public static void writeBulkStringResponse(Response response, ByteBuffer byteBuffer) {
+    public static String writeBulkStringResponse(Response response) {
+        StringBuilder sb = new StringBuilder();
         String value = (String) response.getParameter(0);
-        byteBuffer.put(("$" + value.length() + "\r\n").getBytes());
-        byteBuffer.put(value.getBytes());
-        byteBuffer.put("\r\n".getBytes());
+        sb.append(("$" + value.length() + "\r\n"));
+        sb.append(value);
+        sb.append("\r\n");
+        return sb.toString();
     }
 }

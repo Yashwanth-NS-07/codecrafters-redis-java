@@ -37,13 +37,16 @@ public class StreamStore {
         return streamList.get(streamList.size() - 1);
     }
 
-    public static void handleXADD(Request request, ByteBuffer byteBuffer) {
+    public static String handleXADD(Request request) {
         String streamName = request.getParameter(1);
         String id = request.getParameter(2);
+
+        // sb is only used for calling isIdProper method
+        StringBuilder sb = new StringBuilder();
         if(id.contains("*")) {
             id = generateId(streamName, id);
-        } else if(!isIdProper(streamName, id, byteBuffer)) {
-            return;
+        } else if(!isIdProper(streamName, id, sb)) {
+            return sb.toString();
         }
         Record record = new Record(new Record.Id(id));
         for(int i = 3; i < request.getParameterCount(); i+=2) {
@@ -54,14 +57,14 @@ public class StreamStore {
         put(streamName, record);
         Response response = new Response();
         response.add(id);
-        ResponseUtils.writeBulkStringResponse(response, byteBuffer);
+        return ResponseUtils.writeBulkStringResponse(response);
     }
 
-    public static void handleXREAD(Request request, ByteBuffer byteBuffer, SocketChannel channel) {
+    public static String handleXREAD(Request request, SocketChannel channel) {
 
         if("BLOCK".equalsIgnoreCase(request.getParameter(1))) {
-            handleBLOCKXREAD(request, byteBuffer, channel);
-            return;
+            handleBLOCKXREAD(request, channel);
+            return "";
         }
         String to = finalTo("+"); // maximum to
         Record.Id toId = new Record.Id(to);
@@ -80,10 +83,10 @@ public class StreamStore {
 
             response.add(streamResponse);
         }
-        ResponseUtils.writeArrayResponse(response, byteBuffer);
+        return ResponseUtils.writeArrayResponse(response);
     }
 
-    private static void handleBLOCKXREAD(Request request, ByteBuffer byteBuffer, SocketChannel channel) {
+    private static void handleBLOCKXREAD(Request request, SocketChannel channel) {
         long millis = Long.parseLong(request.getParameter(2));
         if(millis == 0) {
             millis = Long.MAX_VALUE;
@@ -117,7 +120,7 @@ public class StreamStore {
                     }
                 }
             }
-            ResponseUtils.writeArrayResponse(response, tempByteBuffer);
+            tempByteBuffer.put(ResponseUtils.writeArrayResponse(response).getBytes());
             tempByteBuffer.flip();
             try {
                 channel.write(tempByteBuffer);
@@ -127,7 +130,7 @@ public class StreamStore {
         });
     }
 
-    public static void handleXRANGE(Request request, ByteBuffer byteBuffer) {
+    public static String handleXRANGE(Request request) {
         String streamName = request.getParameter(1);
         String from = request.getParameter(2);
         String to = request.getParameter(3);
@@ -136,7 +139,7 @@ public class StreamStore {
         Record.Id fromId = new Record.Id(from);
         Record.Id toId = new Record.Id(to);
         Response response = getResponseFromToId(streamName, fromId, toId);
-        ResponseUtils.writeArrayResponse(response, byteBuffer);
+        return ResponseUtils.writeArrayResponse(response);
     }
 
     private static String incrementSeqByOne(String id) {
@@ -220,12 +223,12 @@ public class StreamStore {
         return start;
     }
 
-    private static boolean isIdProper(String streamName, String id, ByteBuffer byteBuffer) {
+    private static boolean isIdProper(String streamName, String id, StringBuilder sb) {
         String[] parts = id.split("-");
         long milli = Long.parseLong(parts[0]);
         int seq = Integer.parseInt(parts[1]);
         if(milli <= 0 && seq <= 0) {
-            byteBuffer.put("-ERR The ID specified in XADD must be greater than 0-0\r\n".getBytes());
+            sb.append("-ERR The ID specified in XADD must be greater than 0-0\r\n");
             return false;
         }
 
@@ -234,7 +237,7 @@ public class StreamStore {
             long lastRecordMilli = lastRecordId.milli;
             int lastRecordSeq = lastRecordId.seq;
             if((milli < lastRecordMilli) || (milli == lastRecordMilli && seq <= lastRecordSeq)) {
-                byteBuffer.put("-ERR The ID specified in XADD is equal or smaller than the target stream top item\r\n".getBytes());
+                sb.append("-ERR The ID specified in XADD is equal or smaller than the target stream top item\r\n");
                 return false;
             }
         }

@@ -42,27 +42,29 @@ public class ListStore {
         return -1;
     }
 
-    public static void handleRPUSH(Request request, ByteBuffer byteBuffer) {
+    public static String handleRPUSH(Request request) {
         String listName = request.getParameter(1);
+        String s;
         synchronized (ListStore.class) {
             for (int i = 2; i < request.getParameterCount(); i++) {
                 String valueToAppend = request.getParameter(i);
                 add(listName, valueToAppend);
             }
-            writeSizeResponse(listName, byteBuffer);
+            s = writeSizeResponse(listName);
         }
         // don't reuse this byteBuffer
         checkInBlockingMap(listName);
+        return s;
     }
 
-    public static void handleLPUSH(Request request, ByteBuffer byteBuffer) {
+    public static String handleLPUSH(Request request) {
         String listName = request.getParameter(1);
         for (int i = 2; i < request.getParameterCount(); i++) {
             String valueToAppend = request.getParameter(i);
             addFirst(listName, valueToAppend);
         }
-        writeSizeResponse(listName, byteBuffer);
         checkInBlockingMap(listName);
+        return writeSizeResponse(listName);
     }
 
     private static void checkInBlockingMap(String listName) {
@@ -73,7 +75,8 @@ public class ListStore {
             response.add(listName);
             response.add(removeFirst(listName));
             ByteBuffer tempByteBuffer = ByteBuffer.allocate(1000);
-            ResponseUtils.writeArrayResponse(response, tempByteBuffer);
+            String s = ResponseUtils.writeArrayResponse(response);
+            tempByteBuffer.put(s.getBytes());
             try {
                 tempByteBuffer.flip();
                 channel.write(tempByteBuffer);
@@ -83,11 +86,10 @@ public class ListStore {
         }
     }
 
-    public static void handleLPOP(Request request, ByteBuffer byteBuffer) {
+    public static String handleLPOP(Request request) {
         String listName = request.getParameter(1);
         if(!isListExists(listName) || size(listName) <= 0) {
-            byteBuffer.put("$-1\r\n".getBytes());
-            return;
+            return "$-1\r\n";
         }
         int count = 1;
         if(request.getParameterCount() >= 3) {
@@ -98,15 +100,15 @@ public class ListStore {
             response.add(removeFirst(listName));
         }
         if(response.getParameterCount() <= 0) {
-            byteBuffer.put("*-1\r\n".getBytes());
+            return "*-1\r\n";
         } else if(response.getParameterCount() == 1) {
-            ResponseUtils.writeBulkStringResponse(response, byteBuffer);
+            return ResponseUtils.writeBulkStringResponse(response);
         } else {
-            ResponseUtils.writeArrayResponse(response, byteBuffer);
+            return ResponseUtils.writeArrayResponse(response);
         }
     }
 
-    public static void handleBLPOP(Request request, ByteBuffer byteBuffer, SocketChannel channel) {
+    public static String handleBLPOP(Request request, SocketChannel channel) {
         long tillTime = 0;
         String listName = null;
         Response response = new Response();
@@ -126,13 +128,12 @@ public class ListStore {
         }
 
         if(response.getParameterCount() > 0) {
-            ResponseUtils.writeArrayResponse(response, byteBuffer);
-            return;
+            return ResponseUtils.writeArrayResponse(response);
         }
         if(tillTime == 0) {
             blockingMap.putIfAbsent(listName, new LinkedList<>());
             blockingMap.get(listName).add(channel);
-            return;
+            return "";
         }
         tillTime += System.currentTimeMillis();
         final long tillTimeFinal = tillTime;
@@ -149,7 +150,7 @@ public class ListStore {
             }
             ByteBuffer tempByteBuffer = ByteBuffer.allocate(1000);
             if(response.getParameterCount() > 0) {
-                ResponseUtils.writeArrayResponse(response, tempByteBuffer);
+                tempByteBuffer.put(ResponseUtils.writeArrayResponse(response).getBytes());
             } else {
                 tempByteBuffer.put("*-1\r\n".getBytes());
             }
@@ -161,14 +162,13 @@ public class ListStore {
             }
         });
 
-
+        return "";
     }
 
-    public static void handleLRANGE(Request request, ByteBuffer byteBuffer) {
+    public static String handleLRANGE(Request request) {
         String listName = request.getParameter(1);
         if(!isListExists(listName)) {
-            byteBuffer.put("*0\r\n".getBytes());
-            return;
+            return "*0\r\n";
         }
         int listSize = size(listName);
         int from = Integer.parseInt(request.getParameter(2));
@@ -183,28 +183,26 @@ public class ListStore {
         }
         int pCount = to - from + 1;
         if (pCount <= 0) {
-            byteBuffer.put("*0\r\n".getBytes());
+            return "*0\r\n";
         } else {
             Response response = new Response();
             for (int i = from; i <= to; i++) {
                 response.add(getElement(listName, i));
             }
-            ResponseUtils.writeArrayResponse(response, byteBuffer);
+            return ResponseUtils.writeArrayResponse(response);
         }
     }
 
-    public static void handleLLEN(Request request, ByteBuffer byteBuffer) {
+    public static String handleLLEN(Request request) {
         String listName = request.getParameter(1);
-        writeSizeResponse(listName, byteBuffer);
+        return writeSizeResponse(listName);
     }
 
-    private static void writeSizeResponse(String listName, ByteBuffer byteBuffer) {
+    private static String writeSizeResponse(String listName) {
         int listSize = 0;
         if(isListExists(listName)) {
             listSize = map.get(listName).size();
         }
-        byteBuffer.put((":" + listSize + "\r\n").getBytes());
+        return (":" + listSize + "\r\n");
     }
-
-
 }

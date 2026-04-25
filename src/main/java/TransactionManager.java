@@ -31,7 +31,8 @@ public class TransactionManager {
             }
         } else {
             // normal request
-            ProcessRequest.process(request, channel);
+            String response = ProcessRequest.process(request, channel);
+            writeToChannel(response, channel);
         }
     }
 
@@ -42,9 +43,12 @@ public class TransactionManager {
             writeToChannel("*0\r\n", channel);
             return;
         }
+        Response response = new Response();
         for(Request request: requests) {
-            ProcessRequest.process(request, channel);
+            response.add(ProcessRequest.process(request, channel));
         }
+        String responseString = ResponseUtils.writeArrayResponse(response);
+        writeToChannel(responseString, channel);
     }
 
     private static void writeToChannel(String value, SocketChannel channel) throws IOException {

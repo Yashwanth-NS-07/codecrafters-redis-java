@@ -1,92 +1,76 @@
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 public class ProcessRequest {
-    private static final ByteBuffer byteBuffer = ByteBuffer.allocate(1000);
-    public static void process(Request request, SocketChannel channel) throws IOException {
+
+    public static String process(Request request, SocketChannel channel) {
         String cmd = request.getParameter(0);
-        byteBuffer.clear();
         switch (cmd) {
             case "PING":
             case "ping": {
-                byteBuffer.put("+PONG\r\n".getBytes());
-                break;
+                return "+PONG\r\n";
             }
             case "ECHO": {
                 String value = request.getParameter(1);
-                String response = String.format("$%d\r\n%s\r\n", value.length(), value);
-                byteBuffer.put(response.getBytes());
-                break;
+                return String.format("$%d\r\n%s\r\n", value.length(), value);
             }
             case "SET": {
-                MapStore.handleSet(request, byteBuffer);
-                break;
+                return MapStore.handleSet(request);
             }
             case "GET": {
-                MapStore.handleGet(request, byteBuffer);
-                break;
+                return MapStore.handleGet(request);
             }
             case "INCR": {
-                MapStore.handleINCR(request, byteBuffer);
-                break;
+                return MapStore.handleINCR(request);
             }
             case "RPUSH": {
-                ListStore.handleRPUSH(request, byteBuffer);
+                ListStore.handleRPUSH(request);
                 break;
             }
             case "LPUSH": {
-                ListStore.handleLPUSH(request, byteBuffer);
+                ListStore.handleLPUSH(request);
                 break;
             }
             case "LPOP": {
-                ListStore.handleLPOP(request, byteBuffer);
-                break;
+                return ListStore.handleLPOP(request);
             }
             case "BLPOP": {
-                ListStore.handleBLPOP(request, byteBuffer, channel);
-                break;
+                return ListStore.handleBLPOP(request, channel);
             }
             case "LRANGE": {
-                ListStore.handleLRANGE(request, byteBuffer);
-                break;
+                return ListStore.handleLRANGE(request);
             }
             case "LLEN": {
-                ListStore.handleLLEN(request, byteBuffer);
-                break;
+                return ListStore.handleLLEN(request);
             }
             case "XADD": {
-                StreamStore.handleXADD(request, byteBuffer);
-                break;
+                return StreamStore.handleXADD(request);
             }
             case "XRANGE": {
-                StreamStore.handleXRANGE(request, byteBuffer);
-                break;
+                return StreamStore.handleXRANGE(request);
             }
             case "XREAD": {
-                StreamStore.handleXREAD(request, byteBuffer, channel);
-                break;
+                return StreamStore.handleXREAD(request, channel);
             }
             case "TYPE": {
-                handleTYPE(request);
+                return handleTYPE(request);
+            }
+            default: {
+                throw new IllegalArgumentException("Unknow Operation");
             }
         }
-        byteBuffer.flip();
-        channel.write(byteBuffer);
+        return null;
     }
 
-    private static void handleTYPE(Request request) {
+    private static String handleTYPE(Request request) {
         String key = request.getParameter(1);
         if(MapStore.isKeyExists(key)) {
-            byteBuffer.put("+string\r\n".getBytes());
-            return;
+            return "+string\r\n";
         } else if(ListStore.isListExists(key)) {
-            byteBuffer.put("+list\r\n".getBytes());
-            return;
+            return "+list\r\n";
         } else if(StreamStore.isStreamExists(key)) {
-            byteBuffer.put("+stream\r\n".getBytes());
+            return "+stream\r\n";
         } else {
-            byteBuffer.put("+none\r\n".getBytes());
+            return "+none\r\n";
         }
     }
 }
