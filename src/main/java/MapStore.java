@@ -37,8 +37,10 @@ public class MapStore {
         String key = request.getParameter(1);
         String value = request.getParameter(2);
 
+        System.out.println("isExecuted by Tran: " + request.isExecutedByTransaction());
         if(request.isExecutedByTransaction()) {
             // checking if this key is being watched
+            System.out.println("is in keys to watch: "+ keysToWatch.containsKey(request.getSocketAddress()));
             if(keysToWatch.containsKey(request.getSocketAddress())) {
                 Set<String> keys = keysToWatch.get(request.getSocketAddress());
                 if(keys.contains(key)) {
