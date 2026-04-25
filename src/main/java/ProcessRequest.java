@@ -26,8 +26,7 @@ public class ProcessRequest {
                 return ListStore.handleRPUSH(request);
             }
             case "LPUSH": {
-                ListStore.handleLPUSH(request);
-                break;
+                return ListStore.handleLPUSH(request);
             }
             case "LPOP": {
                 return ListStore.handleLPOP(request);
