@@ -45,7 +45,7 @@ public class MapStore {
                 if(keys.containsKey(key)) {
                     String expectedValue = keys.get(key);
                     String currentValue = get(key).get().toString();
-                    if(expectedValue.equals(currentValue)) {
+                    if(!expectedValue.equals(currentValue)) {
                         throw new AbortTransaction("Key has been modified");
                     }
                 }
