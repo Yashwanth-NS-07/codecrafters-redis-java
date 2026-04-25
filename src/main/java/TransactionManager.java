@@ -34,6 +34,7 @@ public class TransactionManager {
                 }
                 transactions.remove(clientAddress);
                 writeToChannel("+OK\r\n", channel);
+                return;
             }
             default: {
                 if(transactions.containsKey(clientAddress)) {
