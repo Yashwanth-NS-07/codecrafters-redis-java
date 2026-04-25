@@ -42,6 +42,7 @@ public class MapStore {
             if(keysToWatch.containsKey(request.getSocketAddress())) {
                 Map<String, String> keys = keysToWatch.get(request.getSocketAddress());
                 // checking if the key is modified
+                System.out.println(key);
                 System.out.println(keys);
                 System.out.println("keys.containsKey(key): " + keys.containsKey(key));
                 if(keys.containsKey(key)) {
