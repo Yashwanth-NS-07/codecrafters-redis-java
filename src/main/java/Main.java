@@ -6,12 +6,9 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class Main {
     private static boolean isRunning = true;
-    private static final ExecutorService pool = Executors.newCachedThreadPool();
 
     public static void main(String[] args) throws IOException {
         int port = 6379;

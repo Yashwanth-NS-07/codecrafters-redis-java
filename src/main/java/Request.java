@@ -9,22 +9,12 @@ import java.util.Optional;
 public class Request {
     private final int parameterCount;
     private final List<String> parameterList;
-    private boolean isExecutedByTransaction;
     private final SocketAddress socketAddress;
 
     private Request(int parameterCount, SocketAddress address) {
         this.parameterCount = parameterCount;
         this.parameterList = new ArrayList<>(parameterCount);
-        this.isExecutedByTransaction = false;
         this.socketAddress = address;
-    }
-
-    public void setExecutedByTransaction(boolean isExecutedByTransaction) {
-        this.isExecutedByTransaction = isExecutedByTransaction;
-    }
-
-    public boolean isExecutedByTransaction() {
-        return this.isExecutedByTransaction;
     }
 
     public SocketAddress getSocketAddress() {
