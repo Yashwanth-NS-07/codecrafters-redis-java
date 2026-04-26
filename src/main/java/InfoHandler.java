@@ -8,7 +8,11 @@ public class InfoHandler {
     }
 
     public static void put(String key, String value) {
-        info.put(key, value);
+        if(key.equals("--replicaof")) {
+            info.put("role", "replica");
+        } else {
+            info.put(key, value);
+        }
     }
     public static String handleINFO(Request request) {
         StringBuilder sb = new StringBuilder();
