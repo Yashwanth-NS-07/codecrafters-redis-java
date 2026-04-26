@@ -79,7 +79,7 @@ public class Main {
         String[] parts = masterAddress.split(" ");
         SocketChannel channel = SocketChannel.open();
         channel.configureBlocking(false);
-        channel.bind(new InetSocketAddress(parts[0], Integer.parseInt(parts[1])));
+        channel.connect(new InetSocketAddress(parts[0], Integer.parseInt(parts[1])));
         channel.finishConnect();
 
         Response response = new Response();
