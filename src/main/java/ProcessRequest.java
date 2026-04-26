@@ -26,6 +26,7 @@ public class ProcessRequest {
             case "XRANGE" -> StreamStore.handleXRANGE(request);
             case "XREAD" -> StreamStore.handleXREAD(request, channel);
             case "TYPE" -> handleTYPE(request);
+            case "REPLCONF" -> HandleReplicas.handleREPLCONF(request);
             default -> throw new IllegalArgumentException("Unknow Operation");
         };
     }
