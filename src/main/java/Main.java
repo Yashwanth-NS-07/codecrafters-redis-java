@@ -1,5 +1,7 @@
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -19,6 +21,10 @@ public class Main {
 
         if(argMap.containsKey("--port")) {
             port = Integer.parseInt(argMap.get("--port"));
+        }
+
+        if(argMap.containsKey("--replicaof")) {
+            connectToMaster(argMap.get("--replicaof"));
         }
 
         System.out.print("Starting Redis server...");
@@ -66,6 +72,21 @@ public class Main {
             TransactionManager.handleRequest(request, clientSocketChannel);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private static void connectToMaster(String masterAddress) throws IOException {
+        String[] parts = masterAddress.split(" ");
+        SocketChannel channel = SocketChannel.open();
+        channel.configureBlocking(false);
+        channel.bind(new InetSocketAddress(parts[0], Integer.parseInt(parts[1])));
+        channel.finishConnect();
+
+        Response response = new Response();
+        response.add("PING");
+        ByteBuffer byteBuffer = ByteBuffer.wrap(ResponseUtils.writeArrayResponse(response).getBytes());
+        while(byteBuffer.hasRemaining()) {
+            channel.write(byteBuffer);
         }
     }
 
