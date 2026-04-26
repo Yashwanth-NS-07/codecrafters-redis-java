@@ -1,8 +1,9 @@
+import java.io.IOException;
 import java.nio.channels.SocketChannel;
 
 public class ProcessRequest {
 
-    public static String process(Request request, SocketChannel channel) {
+    public static String process(Request request, SocketChannel channel) throws IOException {
         String cmd = request.getParameter(0).toUpperCase();
         return switch (cmd) {
             case "PING" -> "+PONG\r\n";
@@ -27,7 +28,7 @@ public class ProcessRequest {
             case "XREAD" -> StreamStore.handleXREAD(request, channel);
             case "TYPE" -> handleTYPE(request);
             case "REPLCONF" -> HandleReplicas.handleREPLCONF(request);
-            case "PSYNC" -> HandleReplicas.handlePSYNC(request);
+            case "PSYNC" -> HandleReplicas.handlePSYNC(request, channel);
             default -> throw new IllegalArgumentException("Unknow Operation");
         };
     }
