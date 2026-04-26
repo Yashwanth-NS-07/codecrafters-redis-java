@@ -9,6 +9,10 @@ public class InfoHandler {
         info.put("master_repl_offset", "0");
     }
 
+    public static String get(String key) {
+        return info.get(key);
+    }
+
     public static void put(String key, String value) {
         if(key.equals("--replicaof")) {
             info.put("role", "slave");
