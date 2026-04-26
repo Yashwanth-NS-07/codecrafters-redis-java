@@ -78,16 +78,45 @@ public class Main {
     private static void connectToMaster(String masterAddress) throws IOException {
         String[] parts = masterAddress.split(" ");
         SocketChannel channel = SocketChannel.open();
-        channel.configureBlocking(false);
+        channel.configureBlocking(true);
         channel.connect(new InetSocketAddress(parts[0], Integer.parseInt(parts[1])));
         channel.finishConnect();
 
         Response response = new Response();
         response.add("PING");
-        ByteBuffer byteBuffer = ByteBuffer.wrap(ResponseUtils.writeArrayResponse(response).getBytes());
+        ByteBuffer byteBuffer = ByteBuffer.allocate(1000);
+        byteBuffer.put(ResponseUtils.writeArrayResponse(response).getBytes());
         while(byteBuffer.hasRemaining()) {
             channel.write(byteBuffer);
         }
+        byteBuffer.clear();
+        while(channel.read(byteBuffer) <= 0);
+
+        byteBuffer.clear();
+        response = new Response();
+        response.add("REPLCONF");
+        response.add("listening-port");
+        response.add(argMap.get("--port"));
+        byteBuffer.put(ResponseUtils.writeArrayResponse(response).getBytes());
+        byteBuffer.flip();
+        while(byteBuffer.hasRemaining()) {
+            channel.write(byteBuffer);
+        }
+
+        byteBuffer.clear();
+        response = new Response();
+        response.add("REPLCONF");
+        response.add("capa");
+        response.add("psync2");
+        byteBuffer.put(ResponseUtils.writeArrayResponse(response).getBytes());
+        byteBuffer.flip();
+        while(byteBuffer.hasRemaining()) {
+            channel.write(byteBuffer);
+        }
+
+        // reading the response of both replconf request
+        byteBuffer.clear();
+        while(channel.read(byteBuffer) <= 0);
     }
 
     private static void prepareArgMap(String[] args) {
