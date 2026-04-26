@@ -86,6 +86,7 @@ public class Main {
         response.add("PING");
         ByteBuffer byteBuffer = ByteBuffer.allocate(1000);
         byteBuffer.put(ResponseUtils.writeArrayResponse(response).getBytes());
+        byteBuffer.flip();
         while(byteBuffer.hasRemaining()) {
             channel.write(byteBuffer);
         }
