@@ -9,7 +9,7 @@ public class InfoHandler {
 
     public static void put(String key, String value) {
         if(key.equals("--replicaof")) {
-            info.put("role", "replica");
+            info.put("role", "slave");
         } else {
             info.put(key, value);
         }
