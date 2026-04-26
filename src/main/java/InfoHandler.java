@@ -6,6 +6,10 @@ public class InfoHandler {
     static {
         info.put("role", "master");
     }
+
+    public static void put(String key, String value) {
+        info.put(key, value);
+    }
     public static String handleINFO(Request request) {
         StringBuilder sb = new StringBuilder();
         for(Map.Entry<String, String> entry: info.entrySet()) {

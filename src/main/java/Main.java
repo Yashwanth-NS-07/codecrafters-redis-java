@@ -4,17 +4,23 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Optional;
 
 public class Main {
     private static boolean isRunning = true;
+    private static final Map<String, String> argMap = new HashMap<>();
 
     public static void main(String[] args) throws IOException {
         int port = 6379;
-        if(args.length > 0) {
-            port = Integer.parseInt(args[1]);
+        prepareArgMap(args);
+
+        if(argMap.containsKey("--port")) {
+            port = Integer.parseInt(argMap.get("--port"));
         }
+
         System.out.print("Starting Redis server...");
         ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.configureBlocking(false);
@@ -60,6 +66,17 @@ public class Main {
             TransactionManager.handleRequest(request, clientSocketChannel);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private static void prepareArgMap(String[] args) {
+        for(int i = 0; i < args.length; i+=2) {
+            String key = args[i];
+            String value = args[i+1];
+            argMap.put(key, value);
+            if(!args[i].equals("--port")) {
+                InfoHandler.put(key, value);
+            }
         }
     }
 }
