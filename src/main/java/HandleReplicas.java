@@ -1,10 +1,11 @@
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 public class HandleReplicas {
     private static final String rdbString;
     static {
         String s = "UkVESVMwMDEx+glyZWRpcy12ZXIFNy4yLjD6CnJlZGlzLWJpdHPAQPoFY3RpbWXCbQi8ZfoIdXNlZC1tZW3CsMQQAPoIYW9mLWJhc2XAAP/wbjv+wP9aog==";
-        rdbString = new String(Base64.getDecoder().decode(s));
+        rdbString = new String(Base64.getDecoder().decode(s), StandardCharsets.ISO_8859_1);
     }
     public static String handleREPLCONF(Request request) {
         return "+OK\r\n";
