@@ -91,7 +91,7 @@ public class Main {
             channel.write(byteBuffer);
         }
         byteBuffer.clear();
-        while(channel.read(byteBuffer) <= 0);
+        while(channel.read(byteBuffer) == 0);
 
         byteBuffer.clear();
         response = new Response();
@@ -117,7 +117,21 @@ public class Main {
 
         // reading the response of both replconf request
         byteBuffer.clear();
-        while(channel.read(byteBuffer) <= 0);
+        while(channel.read(byteBuffer) == 0);
+
+        byteBuffer.clear();
+
+        // sending psync cmd
+        response = new Response();
+        response.add("PSYNC");
+        response.add("?");
+        response.add("-1");
+        byteBuffer.put(ResponseUtils.writeArrayResponse(response).getBytes());
+        byteBuffer.flip();
+        while(byteBuffer.hasRemaining()) {
+            channel.write(byteBuffer);
+        }
+
     }
 
     private static void prepareArgMap(String[] args) {
