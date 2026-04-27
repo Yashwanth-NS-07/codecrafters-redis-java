@@ -56,6 +56,7 @@ public class TransactionManager {
                     System.out.println("r: " + remoteAddress);
                     System.out.println("m: " + masterAddress);
                     if(!remoteAddress.equals(masterAddress)) {
+                        System.out.println(response);
                         writeToChannel(response, channel);
                     }
                 }
