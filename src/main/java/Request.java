@@ -5,6 +5,7 @@ import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 
 public class Request {
     private final int parameterCount;
@@ -95,6 +96,7 @@ public class Request {
             sb.append(parameter);
             sb.append("\r\n");
         }
+        System.out.println(sb.toString());
         return sb.toString();
     }
     public int getParameterCount() {
