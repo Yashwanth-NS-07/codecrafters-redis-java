@@ -52,6 +52,9 @@ public class TransactionManager {
                     // normal request
                     String response = ProcessRequest.process(request, channel);
                     writeToChannel(response, channel);
+                    if(isWriteRequest(request)) {
+                        HandleReplicas.propagateToReplicas(request);
+                    }
                 }
             }
         }
@@ -73,6 +76,9 @@ public class TransactionManager {
 
         for(Request request: requests) {
             sb.append(ProcessRequest.process(request, channel));
+            if(isWriteRequest(request)) {
+                HandleReplicas.propagateToReplicas(request);
+            }
         }
         writeToChannel(sb.toString(), channel);
     }
@@ -83,5 +89,13 @@ public class TransactionManager {
         while(byteBuffer.hasRemaining()) {
             channel.write(byteBuffer);
         }
+    }
+
+    private static boolean isWriteRequest(Request request) {
+        String cmd = request.getParameter(0);
+        return switch (cmd) {
+            case "SET", "INCR", "LPUSH", "RPUSH", "LPOP", "BLPOP", "XADD" -> true;
+            default -> false;
+        };
     }
 }

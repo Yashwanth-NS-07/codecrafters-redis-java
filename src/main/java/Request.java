@@ -81,6 +81,22 @@ public class Request {
             return Optional.empty();
         }
     }
+
+    public String toRawString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("*");
+        sb.append(getParameterCount());
+        sb.append("\r\n");
+        for(int i = 0; i < getParameterCount(); i++) {
+            String parameter = getParameter(i);
+            sb.append("$");
+            sb.append(parameter.length());
+            sb.append("\r\n");
+            sb.append(parameter);
+            sb.append("\r\n");
+        }
+        return sb.toString();
+    }
     public int getParameterCount() {
         return this.parameterCount;
     }
