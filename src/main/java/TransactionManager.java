@@ -75,7 +75,7 @@ public class TransactionManager {
 
         for(Request request: requests) {
             String response = ProcessRequest.process(request, channel);
-            if(channel.getRemoteAddress() != Main.masterSocketAddress) {
+            if(!channel.getRemoteAddress().toString().equals(Main.masterSocketAddress.toString())) {
                 writeToChannel(response, channel);
             }
             sb.append(response);
