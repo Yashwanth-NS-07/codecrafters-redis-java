@@ -144,6 +144,9 @@ public class Main {
             throw new RuntimeException(e);
         }
         while(channel.read(byteBuffer) == 0);
+
+
+        System.out.println("I am slave");
         return channel;
     }
 
