@@ -44,6 +44,7 @@ public class HandleReplicas {
     public static void propagateToReplicas(Request request) {
         ByteBuffer byteBuffer = ByteBuffer.wrap(request.toRawString().getBytes());
         List<SocketChannel> replicasToRemoveIfIoException = new LinkedList<>();
+        System.out.println(replicas);
         for(SocketChannel replica: replicas) {
             while(byteBuffer.hasRemaining()) {
                 try {

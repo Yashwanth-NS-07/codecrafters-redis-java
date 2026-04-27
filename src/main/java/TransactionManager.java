@@ -52,6 +52,7 @@ public class TransactionManager {
                     // normal request
                     String response = ProcessRequest.process(request, channel);
                     writeToChannel(response, channel);
+                    System.out.println("isWriteRequest(request): " + isWriteRequest(request));
                     if(isWriteRequest(request)) {
                         HandleReplicas.propagateToReplicas(request);
                     }
