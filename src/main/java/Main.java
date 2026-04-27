@@ -58,6 +58,7 @@ public class Main {
                     clientSocketChannel.register(selector, SelectionKey.OP_READ);
                     System.out.println("Accepted connection from: " + clientSocketChannel.getRemoteAddress());
                 } else if(selectionKey.isReadable()) {
+                    System.out.println("InfoHandler.isMaster(): " + InfoHandler.isMaster());
                         SocketChannel clientSocketChannel = (SocketChannel) selectionKey.channel();
                         handleRead(clientSocketChannel);
                 }
