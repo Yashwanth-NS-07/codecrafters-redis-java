@@ -82,7 +82,7 @@ public class Main {
 
     private static SocketChannel connectToMaster(SocketAddress masterSocketAddress) throws IOException {
         SocketChannel channel = SocketChannel.open();
-        channel.configureBlocking(true);
+        channel.configureBlocking(false);
         channel.connect(masterSocketAddress);
         channel.finishConnect();
 
