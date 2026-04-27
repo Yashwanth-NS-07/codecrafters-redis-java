@@ -146,6 +146,12 @@ public class Main {
         while(channel.read(byteBuffer) == 0);
         System.out.println(byteBuffer.position());
 
+        byteBuffer.flip();
+        StringBuilder sb = new StringBuilder();
+        while(byteBuffer.hasRemaining()) {
+            sb.append(byteBuffer.get());
+        }
+        System.out.println(sb.toString());
 
         System.out.println("I am slave");
         return channel;
