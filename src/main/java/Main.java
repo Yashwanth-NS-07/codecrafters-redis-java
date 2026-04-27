@@ -135,6 +135,8 @@ public class Main {
         while(byteBuffer.hasRemaining()) {
             channel.write(byteBuffer);
         }
+        byteBuffer.clear();
+        while(channel.read(byteBuffer) == 0);
         return channel;
     }
 
