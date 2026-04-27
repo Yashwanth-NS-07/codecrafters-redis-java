@@ -149,7 +149,7 @@ public class Main {
         byteBuffer.flip();
         StringBuilder sb = new StringBuilder();
         while(byteBuffer.hasRemaining()) {
-            sb.append(byteBuffer.get());
+            sb.append((char) byteBuffer.get());
         }
         System.out.println(sb.toString());
 
