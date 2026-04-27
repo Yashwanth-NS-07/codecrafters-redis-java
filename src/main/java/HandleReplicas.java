@@ -42,6 +42,8 @@ public class HandleReplicas {
     public static void propagateToReplicas(Request request) {
         if("slave".equals(InfoHandler.get("role"))) return;
 
+        System.out.println("propagating");
+
         ByteBuffer byteBuffer = ByteBuffer.wrap(request.toRawString().getBytes());
         List<SocketChannel> replicasToRemoveIfIoException = new LinkedList<>();
         System.out.println(replicas);

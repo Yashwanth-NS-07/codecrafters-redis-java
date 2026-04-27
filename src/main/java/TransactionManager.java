@@ -59,6 +59,10 @@ public class TransactionManager {
                         System.out.println(response);
                         writeToChannel(response, channel);
                     }
+
+                    if(InfoHandler.isMaster()) {
+                        HandleReplicas.propagateToReplicas(request);
+                    }
                 }
             }
         }
@@ -85,7 +89,9 @@ public class TransactionManager {
             if(!channel.getRemoteAddress().toString().equals(Main.masterSocketAddress.toString())) {
                 writeToChannel(response, channel);
             }
-            sb.append(response);
+            if(InfoHandler.isMaster()) {
+                HandleReplicas.propagateToReplicas(request);
+            }
         }
     }
 
