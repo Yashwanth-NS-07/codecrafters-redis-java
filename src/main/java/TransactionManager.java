@@ -51,7 +51,7 @@ public class TransactionManager {
                 } else {
                     // normal request
                     String response = ProcessRequest.process(request, channel);
-                    if(channel.getRemoteAddress() != Main.masterSocketAddress) {
+                    if(!channel.getRemoteAddress().toString().equals(Main.masterSocketAddress.toString())) {
                         writeToChannel(response, channel);
                     }
                 }
@@ -72,7 +72,9 @@ public class TransactionManager {
         sb.append('*');
         sb.append(requests.size());
         sb.append("\r\n");
-
+        if(!channel.getRemoteAddress().toString().equals(Main.masterSocketAddress.toString())) {
+            writeToChannel(sb.toString(), channel);
+        }
         for(Request request: requests) {
             String response = ProcessRequest.process(request, channel);
             if(!channel.getRemoteAddress().toString().equals(Main.masterSocketAddress.toString())) {
@@ -80,7 +82,6 @@ public class TransactionManager {
             }
             sb.append(response);
         }
-        writeToChannel(sb.toString(), channel);
     }
 
     private static void writeToChannel(String value, SocketChannel channel) throws IOException {
