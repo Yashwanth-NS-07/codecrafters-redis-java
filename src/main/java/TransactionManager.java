@@ -51,7 +51,11 @@ public class TransactionManager {
                 } else {
                     // normal request
                     String response = ProcessRequest.process(request, channel);
-                    if(!channel.getRemoteAddress().toString().equals(Main.masterSocketAddress.toString())) {
+                    String remoteAddress = channel.getRemoteAddress().toString();
+                    String masterAddress = Main.masterSocketAddress.toString();
+                    System.out.println("r: " + remoteAddress);
+                    System.out.println("m: " + masterAddress);
+                    if(!remoteAddress.equals(masterAddress)) {
                         writeToChannel(response, channel);
                     }
                 }
