@@ -1,6 +1,6 @@
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.Socket;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -14,6 +14,7 @@ import java.util.Optional;
 public class Main {
     private static boolean isRunning = true;
     private static final Map<String, String> argMap = new HashMap<>();
+    private static SocketAddress masterSocketAddress = null;
 
     public static void main(String[] args) throws IOException {
         int port = 6379;
@@ -21,10 +22,6 @@ public class Main {
 
         if(argMap.containsKey("--port")) {
             port = Integer.parseInt(argMap.get("--port"));
-        }
-
-        if(argMap.containsKey("--replicaof")) {
-            connectToMaster(argMap.get("--replicaof"));
         }
 
         System.out.print("Starting Redis server...");
@@ -39,6 +36,14 @@ public class Main {
 
         Selector selector = Selector.open();
         serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+
+        if(argMap.containsKey("--replicaof")) {
+            String[] parts = argMap.get("--replicaof").split(" ");
+            masterSocketAddress = new InetSocketAddress(parts[0], Integer.parseInt(parts[1]));
+            SocketChannel masterSocketChannel = connectToMaster(masterSocketAddress);
+            masterSocketChannel.register(selector, SelectionKey.OP_READ);
+        }
+
         System.out.println("done");
 
         while(isRunning) {
@@ -75,11 +80,10 @@ public class Main {
         }
     }
 
-    private static void connectToMaster(String masterAddress) throws IOException {
-        String[] parts = masterAddress.split(" ");
+    private static SocketChannel connectToMaster(SocketAddress masterSocketAddress) throws IOException {
         SocketChannel channel = SocketChannel.open();
         channel.configureBlocking(true);
-        channel.connect(new InetSocketAddress(parts[0], Integer.parseInt(parts[1])));
+        channel.connect(masterSocketAddress);
         channel.finishConnect();
 
         Response response = new Response();
@@ -131,7 +135,7 @@ public class Main {
         while(byteBuffer.hasRemaining()) {
             channel.write(byteBuffer);
         }
-
+        return channel;
     }
 
     private static void prepareArgMap(String[] args) {

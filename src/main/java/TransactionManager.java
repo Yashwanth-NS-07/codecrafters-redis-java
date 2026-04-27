@@ -51,10 +51,11 @@ public class TransactionManager {
                 } else {
                     // normal request
                     String response = ProcessRequest.process(request, channel);
-                    writeToChannel(response, channel);
-                    System.out.println("isWriteRequest(request): " + isWriteRequest(request));
-                    if(isWriteRequest(request)) {
-                        HandleReplicas.propagateToReplicas(request);
+                    if(InfoHandler.isMaster()) {
+                        writeToChannel(response, channel);
+                        if(isWriteRequest(request)) {
+                            HandleReplicas.propagateToReplicas(request);
+                        }
                     }
                 }
             }
@@ -76,10 +77,13 @@ public class TransactionManager {
         sb.append("\r\n");
 
         for(Request request: requests) {
-            sb.append(ProcessRequest.process(request, channel));
-            if(isWriteRequest(request)) {
-                HandleReplicas.propagateToReplicas(request);
+            String response = ProcessRequest.process(request, channel);
+            if(InfoHandler.isMaster()) {
+                if(isWriteRequest(request)) {
+                    HandleReplicas.propagateToReplicas(request);
+                }
             }
+            sb.append(response);
         }
         writeToChannel(sb.toString(), channel);
     }

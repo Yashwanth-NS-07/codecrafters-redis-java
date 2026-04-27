@@ -3,6 +3,7 @@ import java.util.Map;
 
 public class InfoHandler {
     private static final Map<String, String> info = new HashMap<>();
+    private static boolean isMaster = true;
     static {
         info.put("role", "master");
         info.put("master_replid", "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb");
@@ -13,9 +14,14 @@ public class InfoHandler {
         return info.get(key);
     }
 
+    public static boolean isMaster()  {
+        return isMaster;
+    }
+
     public static void put(String key, String value) {
         if(key.equals("--replicaof")) {
             info.put("role", "slave");
+            isMaster = false;
         } else {
             info.put(key, value);
         }

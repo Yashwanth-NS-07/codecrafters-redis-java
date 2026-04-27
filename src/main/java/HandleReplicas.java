@@ -18,6 +18,8 @@ public class HandleReplicas {
         return "+OK\r\n";
     }
     public static String handlePSYNC(Request request, SocketChannel channel) throws IOException {
+        if("slave".equals(InfoHandler.get("role"))) return "";
+
         StringBuilder sb = new StringBuilder();
         sb.append("+FULLRESYNC ");
         sb.append(InfoHandler.get("master_replid"));
