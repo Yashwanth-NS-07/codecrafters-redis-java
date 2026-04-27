@@ -1,7 +1,3 @@
-import com.sun.nio.sctp.SctpSocketOption;
-import com.sun.source.tree.Scope;
-
-import javax.swing.plaf.synth.SynthColorChooserUI;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
@@ -42,6 +38,8 @@ public class HandleReplicas {
     }
 
     public static void propagateToReplicas(Request request) {
+        if("slave".equals(InfoHandler.get("role"))) return;
+
         ByteBuffer byteBuffer = ByteBuffer.wrap(request.toRawString().getBytes());
         List<SocketChannel> replicasToRemoveIfIoException = new LinkedList<>();
         System.out.println(replicas);
