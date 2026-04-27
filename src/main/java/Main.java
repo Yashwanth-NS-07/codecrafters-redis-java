@@ -14,7 +14,8 @@ import java.util.Optional;
 public class Main {
     private static boolean isRunning = true;
     private static final Map<String, String> argMap = new HashMap<>();
-    private static SocketAddress masterSocketAddress = null;
+    // don't modify once it's been instantiated in main function;
+    public static SocketAddress masterSocketAddress = null;
 
     public static void main(String[] args) throws IOException {
         int port = 6379;

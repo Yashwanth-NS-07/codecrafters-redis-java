@@ -51,11 +51,8 @@ public class TransactionManager {
                 } else {
                     // normal request
                     String response = ProcessRequest.process(request, channel);
-                    if(InfoHandler.isMaster()) {
+                    if(channel.getRemoteAddress() != Main.masterSocketAddress) {
                         writeToChannel(response, channel);
-                        if(isWriteRequest(request)) {
-                            HandleReplicas.propagateToReplicas(request);
-                        }
                     }
                 }
             }
@@ -78,10 +75,8 @@ public class TransactionManager {
 
         for(Request request: requests) {
             String response = ProcessRequest.process(request, channel);
-            if(InfoHandler.isMaster()) {
-                if(isWriteRequest(request)) {
-                    HandleReplicas.propagateToReplicas(request);
-                }
+            if(channel.getRemoteAddress() != Main.masterSocketAddress) {
+                writeToChannel(response, channel);
             }
             sb.append(response);
         }
